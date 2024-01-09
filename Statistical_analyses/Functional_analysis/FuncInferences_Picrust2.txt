@@ -1,0 +1,145 @@
+using picrust2 - see following tuto: 
+> https://bioinformaticsdotca.github.io/MIC_2021_Module3_lab 
+> or https://github.com/picrust/picrust2/wiki/PICRUSt2-Tutorial-(v2.5.2)
+
+### requirements
+> Linux, Ubuntu or MacOsx distribution - in my case Ubuntu 22.04.2 LTS - Jammy
+
+#####################################################
+### installation of picrust2 and some other tools- 
+#####################################################
+Install anaconda or miniconda - see https://docs.conda.io/en/latest/miniconda.html
+Install mamba package (environment manager) using the following cmd: 
+conda install -c conda-forge mamba
+
+install Picrust2 - see https://github.com/picrust/picrust2/wiki/Installation
+mamba create -n picrust2 -c bioconda -c conda-forge picrust2=2.5.2
+
+# activate conda env
+conda activate picrust2
+
+# install biom to convert the dataset to biom format to create the necessary files from phyloseq object)
+pip install numpy
+pip install biom-format
+
+#####################################################
+### prepare the dataset - 
+#####################################################
+BiomPath='/media/qpetitjean/Mass_Storage1/POSTDOC_INP_GOLFECH_2023/Outputs/BiomOutput'
+
+# convert the count table to biom format
+In=$BiomPath/LabGm_ASV_table.txt
+Out=$BiomPath/LabGm_ASV_table.biom
+
+biom convert -i $In -o $Out --table-type="OTU table" --to-json 
+
+# add sample metadata and taxonomy
+Tax=$BiomPath/LabGm_ASV_taxonomy.txt
+Sam=$BiomPath/LabGm_sample_data.txt
+OutFull=$BiomPath/ASV_table_w_tax_and_md.biom
+
+biom add-metadata -i $Out -o $OutFull --observation-metadata-fp $Tax --sample-metadata-fp $Sam
+
+# check that the conversion has worked by creating a summary of the data
+sum=$BiomPath/table_summary.txt
+
+biom summarize-table -i $OutFull -o $sum
+
+######################################
+# start using picrust2 (step by step)
+######################################
+# specify a global output path
+GlobOut='/media/qpetitjean/Mass_Storage1/POSTDOC_INP_GOLFECH_2023/Outputs/Picrust2Output'
+
+# specify the number of core to use for parallel computation
+Core=10
+
+## first, proceed to sequences placement
+########################################
+
+seq=$BiomPath/LabGmSeq.fasta
+OutPlace=$GlobOut/placed_seqs.tre
+
+place_seqs.py -s $seq -o $OutPlace -p $Core
+
+## second, proceed to Hidden state prediction (hsp) for 16s copy
+################################################################ 
+
+## compute how many 16S copies are expected to be in the genome for each study sequence
+## compute nearest-sequenced taxon index (NSTI), the measure of how distant each study sequence ## is from the nearest reference sequence in the tree.
+OutHSP16s=$GlobOut/16S_predicted.tsv
+
+hsp.py -i 16S -t $OutPlace -o $OutHSP16s -m mp -p $Core -n
+
+## we are now doing the same thing for Enzyme Classification (E.C.)
+###################################################################
+# Compute the predicted abundances of gene families of interest for each placed study sequence 
+OutHSPEC=$GlobOut/EC_predicted.tsv
+
+hsp.py -i EC -t $OutPlace -o $OutHSPEC -p $Core
+
+### check the files (use q to quit)
+less $OutHSP16s
+less $OutHSPEC
+
+### check the five max NSTI values (max is 2.58, setting the treshold to 2 remove 1 out of 394 OTUs) 
+sort -k3nr $OutHSP16s | head -5
+
+## third, perform Metagenome prediction
+########################################
+
+### for EC (max NSTI value is 2.58, setting the treshold to 2 remove 1 OTUs) 
+OutMetagenomEC=$GlobOut/EC_metagenome_out
+
+metagenome_pipeline.py -i $OutFull -m $OutHSP16s -f $OutHSPEC -o $OutMetagenomEC --max_nsti 2 --strat_out
+
+## fourth (and last), Infer pathway abundances
+###############################################
+## infer pathway abundances based on the presence of gene families
+### for EC 
+InPathwayEC=$OutMetagenomEC/pred_metagenome_unstrat.tsv.gz
+OutPathwayEC=$GlobOut/EC_pathways_out
+
+pathway_pipeline.py -i $InPathwayEC -o $OutPathwayEC -p $Core --per_sequence_contrib --per_sequence_abun $OutMetagenomEC/seqtab_norm.tsv.gz --per_sequence_function $OutHSPEC
+
+## Add Descriptions
+###############################################
+## add a column to your table of gene family or pathway abundances corresponding to a quick description of each functional category
+### for EC
+DescOutEC=$OutMetagenomEC/pred_metagenome_unstrat_descrip.tsv.gz
+DescInMETACYC=$OutPathwayEC/path_abun_unstrat.tsv.gz
+DescOutMETACYC=$OutPathwayEC/pred_metagenome_unstrat_descrip.tsv.gz
+
+add_descriptions.py -i $InPathwayEC -m EC -o $DescOutEC
+add_descriptions.py -i $DescInMETACYC -m METACYC -o $DescOutMETACYC
+
+## Comparing with shuffled predictions - here we are shuffling the data across 10 datasets - then the data should be averaged and compared with the formal analysis (see the supplementary material of the Picrust2 article and https://github.com/picrust/picrust2/wiki/Generating-shuffled-predictions)
+###############################################
+mkdir $GlobOut/EC_predicted_shuffled
+
+ShuffleInEC=$GlobOut/EC_predicted.tsv
+ShuffleOutEC=$GlobOut/EC_predicted_shuffled
+
+# randomizes the ASV labels for all predicted genomes 10 times 
+shuffle_predictions.py -i $ShuffleInEC -o $ShuffleOutEC -r 10 -s 131
+
+# Make folders for shuffled output
+## for EC
+mkdir $GlobOut/EC_metagenome_out_shuffled
+mkdir $GlobOut/EC_pathways_out_shuffled
+
+
+# run the loop
+for i in {1..10}; do
+    
+    # Define in and out file paths
+	## for EC
+    EC_SHUFFLED=$GlobOut/EC_predicted_shuffled/EC_predicted_shuf"$i".tsv
+    OUT_META_EC=$GlobOut/EC_metagenome_out_shuffled/rep"$i"
+    OUT_PATHWAYS_EC=$GlobOut/EC_pathways_out_shuffled/rep"$i"
+
+    # PICRUSt2 scripts to get prediction abundance tables for gene and pathway levels, respectively.
+## for EC
+    metagenome_pipeline.py -i $OutFull -m $OutHSP16s -f $EC_SHUFFLED -o $OUT_META_EC --max_nsti 2 --strat_out
+     pathway_pipeline.py -i $OUT_META_EC/pred_metagenome_contrib.tsv.gz -o $OUT_PATHWAYS_EC -p $Core
+done   
