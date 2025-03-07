@@ -95,7 +95,7 @@ here:<br /><......>
 <li>Test treatments and covariates effects on functions differential abundance using Linda (LMM) using <code>Statistical_analyses/Functional_analysis/LINDA_FuncComp.R</code> </li><br />
 </ol>
 
-&ast; The raw dataset available in the figshare repository (10.6084/m9.figshare.28554470) has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database (https://www.arb-silva.de/) for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
+&ast; The raw dataset available in the Zenodo repository (https://doi.org/10.5281/zenodo.14989875) has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database (https://www.arb-silva.de/) for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
 
 ## List of R packages needed 
 
