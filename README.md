@@ -5,9 +5,9 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota)
 ![GitHub repo size](https://img.shields.io/github/repo-size/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota)
 
-Dataset: <a href="https://doi.org/10.5281/zenodo.14989875"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.14989875.svg" alt="DOI"></a>
+Datasets: <a href="https://doi.org/10.5281/zenodo.14989875"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.14989875.svg" alt="DOI"></a>
 
-Permanent copy of this code repository: 
+Permanent copy of this code repository: <a href="https://doi.org/10.5281/zenodo.14990007"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.14990007.svg" alt="DOI"></a>
 
 This repository contains:
 <ul>
@@ -174,6 +174,6 @@ if (!require("vegan", quietly = TRUE))
 
 ## Citation
 
-Data: PETITJEAN, Q. (2025). Dataset from: Petitjean et al. (Submitted) Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. [Data set]. Zenodo. https://doi.org/10.5281/zenodo.14989875
+Datasets: PETITJEAN, Q. (2025). Dataset from: Petitjean et al. (Submitted) Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. [Data set]. Zenodo. https://doi.org/10.5281/zenodo.14989875
 
-Code: 
+Code: Quentin PETITJEAN. (2025). Code from: Petitjean et al. (Submitted) Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish (V1.0). Zenodo. https://doi.org/10.5281/zenodo.14990007
