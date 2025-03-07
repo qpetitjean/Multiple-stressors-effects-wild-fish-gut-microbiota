@@ -1,3 +1,61 @@
+# Script Title: Data Pre-processing and Cleaning for Metabarcoding Analysis
+#      
+# Author: Quentin PETITJEAN
+# Date Created: 03/2023
+# Last Modified: 12/12/2023
+# ==============================================================================
+# Requirements: 
+# - R version 4.2.3
+# - Packages: 
+#   - metabaR v1.0.0: For handling metabarcoding data and quality control.
+#   - ggplot2 v3.5.1: For data visualization.
+#   - reshape2 v1.4.4: For data reshaping and manipulation.
+#   - cowplot v1.1.1: For combining multiple plots.
+#   - RColorBrewer v1.1-3: For generating color palettes.
+#   - plyr v1.8.8: For data aggregation and manipulation.
+# ==============================================================================
+# Script Overview:
+# This script processes metabarcoding data through several key steps:
+# 1. Importing raw data and setting file paths.
+# 2. Preprocessing the data by filtering low-abundance MOTUs and those with low sample occurrence,
+#    following the guidelines of Bokulich et al. (2013).
+# 3. Generating diagnostic plots for quality control, including rarefaction curves,
+#    contamination assessment, and PCR replicate evaluation.
+# 4. Flagging and removing potential artifacts from extraction and sequencing steps.
+#
+# Note that this script is optional since the cleaned data are given in the repository
+# ==============================================================================
+# Usage:
+# 1. Update the 'savingDir' variable with the correct directory path containing your input files.
+# 2. Ensure all necessary input files (e.g., lab data, PCRs, sample metadata) are in the specified directory.
+# 3. Run the script in an R environment to execute data pre-processing, quality control, and cleaning.
+# 4. The script will output cleaned MOTU tables and an aggregated metabar list saved as an RDS file.
+# ==============================================================================
+# References:
+# Bokulich NA, Subramanian S, Faith JJ, Gevers D, Gordon JI, Knight R, et al. 
+# Quality-filtering vastly improves diversity estimates from Illumina amplicon sequencing. Nat Methods 2013; 10: 57–59. 
+# ==============================================================================
+
+##############################################
+#       	Install needed packages            #
+##############################################
+
+if(!require(metabaR)){
+  install.packages("metabaR")
+}
+if(!require(ggplot2)){
+  install.packages("ggplot2")
+}
+if(!require(reshape2)){
+  install.packages("reshape2")
+}
+if(!require(cowplot)){
+  install.packages("cowplot")
+}
+if(!require(RColorBrewer)){
+  install.packages("RColorBrewer")
+}
+
 ##############################################
 #       	Data pre-processing                #
 ##############################################
@@ -6,18 +64,19 @@
 # specify some path   #
 #######################
 # the path to the directory from where file should be both imported and saved
-savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs/Preprocessing-Metabar"
+savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
 
 #######################
 # Import data         #
 #######################
-# import the dataset
-labData <- read.table(file.path(savingDir, "Phypat1_2_3_R1R2_concatenated_ngsfilt_n50_ali_uniq_noS_cl97_silva_138.1_ssuparc_full_tagged_merged_fullTaxo_LabOnly.tab"), 
+# import the raw dataset
+labData <- read.table(file.path(savingDir, "Data/RawData", "Phypat1_2_3_R1R2_concatenated_ngsfilt_n50_ali_uniq_noS_cl97_silva_138.1_ssuparc_full_tagged_merged_fullTaxo_LabOnly.tab"), 
                           sep="\t", dec= ".")
 
-####################################################################
-# Data curation according to Bokulich et al 2013                   #
-####################################################################
+############################################################################################################################
+# Data curation according to Bokulich et al 2013 - optional -                                                              #
+# the preprocessed data are available in the repository, it is hence possible to start at the Import metabar list section  #                
+############################################################################################################################
 
   ## Remove MOTUs with relative abundance below 0.00005
   totreads <- sum(labData$count)
@@ -54,24 +113,17 @@ labDataCleanFinal <- as.data.frame(t(labDataClean[,-c(grep("count", colnames(lab
 rownames(labDataCleanFinal) <-  gsub("^X", "", rownames(labDataCleanFinal))
 
 # save them on the hardrive
-write.table(labDataCleanFinal, file.path(savingDir, "file_motus_P1P2P3_BokulFilt_MergedRep.txt"), sep="\t", dec= ".")
-write.table(charcol, file.path(savingDir, "file_motus_P1P2P3_BokulFiltTaxo_MergedRep.txt"), sep="\t", dec= ".")
+write.table(labDataCleanFinal, file.path(savingDir, "Data/PreprocessedData", "file_motus_P1P2P3_BokulFilt_MergedRep.txt"), sep="\t", dec= ".")
+write.table(charcol, file.path(savingDir, "Data/PreprocessedData", "file_motus_P1P2P3_BokulFiltTaxo_MergedRep.txt"), sep="\t", dec= ".")
 
 ##########################
 # Import metabar list    #
 ##########################
 
-# Import libraries needed for the following part
-library(metabaR)
-library(ggplot2)
-library(reshape2)
-library(cowplot)
-library(RColorBrewer)
-
-fguts_Bact <- metabaR::tabfiles_to_metabarlist(file_reads = file.path(savingDir, "file_motus_P1P2P3_BokulFilt_MergedRep.txt"),
-                                               file_motus = file.path(savingDir, "file_motus_P1P2P3_BokulFiltTaxo_MergedRep.txt"),
-                                               file_pcrs =  file.path(savingDir, "fishgut_Bact_pcrs_final.txt"),
-                                               file_samples = file.path(savingDir, "fishgut_Bact_samples_final.txt"),
+fguts_Bact <- metabaR::tabfiles_to_metabarlist(file_reads = file.path(savingDir, "Data/PreprocessedData", "file_motus_P1P2P3_BokulFilt_MergedRep.txt"),
+                                               file_motus = file.path(savingDir, "Data/PreprocessedData", "file_motus_P1P2P3_BokulFiltTaxo_MergedRep.txt"),
+                                               file_pcrs =  file.path(savingDir, "Data/PreprocessedData", "fishgut_Bact_pcrs_final.txt"),
+                                               file_samples = file.path(savingDir, "Data/PreprocessedData", "fishgut_Bact_samples_final.txt"),
                                                files_sep = "\t")
 
 metabaR::summary_metabarlist(fguts_Bact)
@@ -629,4 +681,4 @@ p + scale_fill_manual(values = c("goldenrod4", "blue4")) +
   scale_color_manual(values = c("goldenrod4", "blue4")) +
   labs(color="matrix type")
 
-saveRDS(fguts_Bact_agg, file.path(savingDir, "fguts_Bact_agg_MergedRep.RDS"))
+saveRDS(fguts_Bact_agg, file.path(savingDir, "Data/CleanedData", "fguts_Bact_agg_MergedRep.RDS"))

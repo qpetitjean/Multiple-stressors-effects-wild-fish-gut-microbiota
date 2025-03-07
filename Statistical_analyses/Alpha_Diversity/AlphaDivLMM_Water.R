@@ -1,16 +1,81 @@
-##############################################################################################################
-#  Compute Alpha diversity indices and test treatments effects using LMM and dredge method                   #
-#############################################################################################################
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/multiNorm.R") # import a function used to compute multiple normalization methods
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/DredgedLMM.R")  # import a function used to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/alphaDiv.R") # import a function compute alpha diversity indices from a matrix containing read counts per sample
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GutMicrobiome/BxpltFunc.R") # import a function compute draw customized boxplots
+# Script Title: Compute Alpha Diversity Indices and Test Treatment Effects Using LMM and Dredge Method in water tank
+#      
+# Author: Quentin PETITJEAN
+# Date Created: 03/2023
+# Last Modified: 05/05/2024
+# ==============================================================================
+# Requirements: 
+# - R version 4.2.3
+# - Packages:
+#   - metabaR v1.0.0: For processing and subsetting metabarcoding datasets.
+#   - ape v5.7-1:: For phylogenetic tree manipulation.
+#   - car v3.1-2: For computing type-III ANOVA on linear models.
+#   - kableExtra v1.3.4: For creating enhanced HTML tables of statistical results.
+# - Source Files:
+#   - multiNorm.R: Function for applying multiple normalization methods.
+#   - DredgedLMM.R: Function to perform model dredging for LMM and retrieve summaries.
+#   - alphaDiv.R: Function to compute alpha diversity indices.
+#   - BxpltFunc.R: Function to generate customized boxplots.
+# ==============================================================================
+# Script Overview:
+# This script computes alpha diversity indices from a cleaned metabaR object and 
+# tests the effects of experimental treatments (Contamination, Population, Injection) 
+# using linear mixed models (LMM) coupled with a dredge method for model selection.
+# The workflow includes:
+# 1. Importing required functions via source files.
+# 2. Specifying file paths and importing input data (phylogenetic tree and metabaR object).
+# 3. Subsetting the data to focus on water samples and assigning treatment-specific colors.
+# 4. Applying multiple normalization methods to the dataset.
+# 5. Computing alpha diversity indices (e.g., Richness, Shannon, Simpson, PD) over 
+#    each normalized dataset, incorporating phylogenetic information when needed.
+# 6. Running LMM analyses on the normalized data to test treatment effects, extracting 
+#    model summaries, ANOVA tables, and R² values.
+# 7. Generating diagnostic plots and saving models performance outputs.
+# 8. Compiling and exporting summary tables (in HTML) for each normalization method.
+# ==============================================================================
+# Usage:
+# 1. Ensure that all required source files and input data files (e.g., PhyloTree.nwk, 
+#    fguts_Bact_agg_MergedRep.RDS) are available in the specified directories.
+# 2. Update the 'savingDir' variable to the correct directory path for input and output.
+# 3. Install the required R packages if not already installed.
+# 4. Run the script in an R environment to perform normalization, compute alpha diversity 
+#    indices, run LMM analyses, and generate summary outputs and diagnostic plots.
+# 5. The script outputs include:
+#    - HTML tables summarizing LMM results for each normalization method.
+#    - Diagnostic plot files (TIF format) for model performance.
+#    - An RDS file containing the LMM results.
+# ==============================================================================
+
+##############################################
+#       	Install needed packages            #
+##############################################
+
+if(!require(metabaR)){
+  install.packages("metabaR")
+}
+if(!require(ape)){
+  install.packages("ape")
+}
+if(!require(car)){
+  install.packages("car")
+}
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+}
 
 #######################
 # specify some path   #
 #######################
 # the path to the directory from where file should be both imported and saved
-savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
+savingDir <- "w:/POSTDOC_INP_GOLFECH_2023/Outputs"
+
+##############################################
+#   Import some custom functions             #
+##############################################
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/multiNorm.R") # import a function used to compute multiple normalization methods
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/DredgedLMM.R")  # import a function used to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/alphaDiv.R") # import a function compute alpha diversity indices from a matrix containing read counts per sample
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/BxpltFunc.R") # import a function compute draw customized boxplots
 
 #######################
 # Import the data     #
@@ -18,11 +83,11 @@ savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
 
 # import the phylogenetic tree (.nwk)
 PhyloTree <-
-  ape::read.tree(file.path(savingDir, "PhyloTree.nwk"))
+  ape::read.tree(file.path(savingDir, "Data/PhyloTree/PhyloTree.nwk"))
 
 
 # import the cleaned dataset (metabaR object) and select only gut samples
-labWater <- readRDS(file.path(savingDir, "Preprocessing-Metabar/fguts_Bact_agg_MergedRep.RDS"))
+labWater <- readRDS(file.path(savingDir, "Data/CleanedData", "fguts_Bact_agg_MergedRep.RDS"))
 labWater <- metabaR::subset_metabarlist(labWater,
                                        table = "pcrs",
                                        indices = labWater$pcrs$matrix == "water")

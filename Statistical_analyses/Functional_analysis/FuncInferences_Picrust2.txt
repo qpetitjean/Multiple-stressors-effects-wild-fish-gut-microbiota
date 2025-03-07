@@ -1,9 +1,35 @@
-using picrust2 - see following tuto: 
-> https://bioinformaticsdotca.github.io/MIC_2021_Module3_lab 
-> or https://github.com/picrust/picrust2/wiki/PICRUSt2-Tutorial-(v2.5.2)
-
-### requirements
-> Linux, Ubuntu or MacOsx distribution - in my case Ubuntu 22.04.2 LTS - Jammy
+#!/bin/bash
+# Script Title: PICRUSt2 Functional Inference Pipeline – Prepare BIOM Files and Run PICRUSt2 Analyses
+#
+# Author: Quentin PETITJEAN
+# Date Created: 13/12/2023
+# Last Modified: 13/12/2023
+# ==============================================================================
+# Requirements:
+# - Linux/Ubuntu/MacOS distribution (e.g., Ubuntu 22.04.2 LTS - Jammy)
+# - Anaconda or Miniconda installed with mamba package manager
+# - PICRUSt2 version 2.5.2 installed via mamba/conda
+# - biom-format Python package installed via pip
+#
+# Overview:
+# This Bash script prepares the input files for PICRUSt2 functional inference.
+# The pipeline performs the following steps:
+# 1. Converts a count table to BIOM format.
+# 2. Adds sample metadata and taxonomy to the BIOM file.
+# 3. Summarizes the BIOM file.
+# 4. Executes PICRUSt2 analyses including sequence placement, hidden state prediction,
+#    metagenome prediction, pathway inference, and description addition.
+# 5. Generates shuffled predictions for downstream comparison.
+#
+# Usage:
+# 1. Set the 'savingDir' variable to the appropriate directory.
+# 2. Ensure PICRUSt2 and required tools are installed and the conda environment is activated.
+# 3. Run this script from the terminal.
+#
+# References:
+# - PICRUSt2 Tutorial: https://bioinformaticsdotca.github.io/MIC_2021_Module3_lab
+# - PICRUSt2 GitHub Wiki: https://github.com/picrust/picrust2/wiki/PICRUSt2-Tutorial-(v2.5.2)
+# ==============================================================================
 
 #####################################################
 ### installation of picrust2 and some other tools- 

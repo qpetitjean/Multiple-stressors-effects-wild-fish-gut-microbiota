@@ -1,9 +1,9 @@
-# Script Title: Conduct LINDA Analysis for Differential Abundance in Fish Gut Microbiota
-#               Testing of Taxa at the Family Level using LMM
+# Script Title: Conduct LINDA Analysis for Differential Abundance Testing of Taxa 
+#               at the Phylum Level in Water Samples using LMM
 #
 # Author: Quentin PETITJEAN
 # Date Created: 03/2023
-# Last Modified: 07/11/2024
+# Last Modified: 05/05/2024
 # ==============================================================================
 # Requirements:
 # - R version 4.2.3
@@ -15,63 +15,42 @@
 #   - ggplot2 v3.5.1: For generating volcano and relative abundance plots.
 #   - kableExtra v1.3.4: For creating enhanced HTML summary tables.
 # - Source Files:
-#   - volcanoPlot.R: Custom function to display volcano plots from LINDA analysis results.
+#   - volcanoPlot.R: Custom function to generate volcano plots from LINDA analysis results.
 # ==============================================================================
 # Script Overview:
-# This script performs differential abundance analysis of fish gut microbiota at the family level using the LINDA 
-# method (as described in Zhou et al., 2022). It tests the effects of treatments (e.g., Contamination, Immune Challenge, Origin, Sex, Size) 
-# on the relative abundance of taxa via a linear mixed model (LMM) framework provided by the MicrobiomeStat package.
+# This script performs differential abundance analysis at the phylum level for water samples 
+# using the LINDA method as described Zhou et al., 2022. The analysis tests the effects 
+# of treatments (e.g., Contamination, Immune Challenge, and Origin) on the relative 
+# abundance of taxa using a linear mixed model (LMM) framework.
 #
 # The workflow includes:
-# 1. Importing experimental design data (DesignData.csv) and a cleaned metabaR object for fish gut samples.
-# 2. Retrieving OTU taxonomy and aggregating read counts at the family level.
-# 3. Merging sample metadata with aggregated taxonomic data and converting the result into a phyloseq object.
-# 4. Filtering out taxa detected in fewer than 5 samples.
-# 5. Running the LINDA analysis using an LMM approach to identify taxa with significant 
-#    differential abundance among treatment groups.
-# 6. Visualizing LINDA results using volcano plots that display log2 fold changes and adjusted p-values.
-# 7. Generating relative abundance bar plots for both the top abundant families and for families 
-#    showing significant differences.
-# 8. Storing significant results in an HTML table for reporting.
+# 1. Installing and loading required packages.
+# 2. Specifying directory paths for input and output.
+# 3. Importing custom functions (volcanoPlot.R).
+# 4. Importing and subsetting a cleaned metabaR object for water samples.
+# 5. Retrieving OTU taxonomy and aggregating read counts at the phylum level.
+# 6. Converting the aggregated data into a phyloseq object.
+# 7. Merging sample metadata and releveling treatment factors.
+# 8. Filtering out taxa detected in less than 5 samples.
+# 9. Running LINDA analysis using an LMM approach via the MicrobiomeStat package.
+# 10. Visualizing LINDA results with volcano plots and storing significant results in an HTML table.
+# 11. Generating relative abundance bar plots for both top abundant taxa and for taxa with 
+#     significant changes.
 #
 # Usage:
-# 1. Update the 'savingDir' variable to the directory where your input files and outputs are stored.
-# 2. Ensure that all required source files (e.g., volcanoPlot.R) and input data (e.g., DesignData.csv, 
-#    fguts_Bact_agg_MergedRep.RDS) are available.
-# 3. Install and load all required R packages.
-# 4. Run the script in an R environment to perform the LINDA analysis, generate volcano plots, and 
-#    create relative abundance plots.
-# 5. The script outputs include:
-#    - Volcano plots (TIF format) summarizing the differential abundance analysis.
-#    - Relative abundance plots (SVG format) for visualizing treatment effects.
-#    - An HTML table summarizing significant LINDA results.
-# 
+# 1. Update the 'savingDir' variable to the correct directory containing your input data 
+#    (e.g., DesignData.csv, fguts_Bact_agg_MergedRep.RDS) and desired output location.
+# 2. Ensure all required packages and source files are installed and accessible.
+# 3. Run the script in an R environment to perform the LINDA analysis, generate volcano plots,
+#    and create relative abundance plots.
+# 4. The script outputs include:
+#    - Volcano plots (TIF format) summarizing differential abundance results.
+#    - Relative abundance plots (SVG format) at the phylum level.
+#    - An HTML table summarizing significant LINDA analysis results.
 # ==============================================================================
 # References:
 # Zhou H, He K, Chen J, Zhang X. LinDA: linear models for differential abundance analysis of microbiome compositional data. Genome Biol 2022; 23: 1–23. 
 # ==============================================================================
-
-##############################################
-#       	Install needed packages            #
-##############################################
-if(!require(metabaR)){
-  install.packages("metabaR")
-}
-if(!require(kableExtra)){
-  install.packages("kableExtra")
-}
-if(!require(ggplot2)){
-  install.packages("ggplot2")
-}
-if(!require(phyloseq)){
-  install.packages("phyloseq")
-}
-if(!require(MicrobiomeStat)){
-  install.packages("MicrobiomeStat")
-}
-if(!require(reshape2)){
-  install.packages("reshape2")
-}
 
 #######################
 # specify some path   #
@@ -91,67 +70,52 @@ source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-
 # Import the data     #
 #######################
 
-# import the full dataset from the experiment (treatment & behavioral & physiological measures)
-FullDat <-
-  read.csv2(file.path(savingDir, "Data/DesignData", "DesignData.csv"), dec = ".", sep = ";")
-
 # import the cleaned dataset (metabaR object) and select only gut samples
-labFish <- readRDS(file.path(savingDir, "Data/CleanedData", "fguts_Bact_agg_MergedRep.RDS"))
-labFish <- metabaR::subset_metabarlist(labFish,
-                                       table = "pcrs",
-                                       indices = labFish$pcrs$matrix == "fish_gut")
+labWater <- readRDS(file.path(savingDir, "Data/CleanedData", "fguts_Bact_agg_MergedRep.RDS"))
+labWater <- metabaR::subset_metabarlist(labWater,
+                                        table = "pcrs",
+                                        indices = labWater$pcrs$matrix == "water")
+
+names(labWater$samples)[which(names(labWater$samples) == "treatment_contam")] <- "Contam"
+names(labWater$samples)[which(names(labWater$samples) == "pop")] <- "Pop"
+names(labWater$samples)[which(names(labWater$samples) == "treatment_inj")] <- "Inj"
 
 # retrieve OTUs taxonomy
-OTUsTax <- data.frame(MOTU = colnames(labFish$reads),
-                      phylum = labFish$motus$phylum, 
-                      class = labFish$motus$class,
-                      order = labFish$motus$order, 
-                      family = labFish$motus$family, 
-                      genus = labFish$motus$genus,
-                      species = labFish$motus$species)
+OTUsTax <- data.frame(MOTU = colnames(labWater$reads),
+                      phylum = labWater$motus$phylum, 
+                      class = labWater$motus$class,
+                      order = labWater$motus$order, 
+                      family = labWater$motus$family, 
+                      genus = labWater$motus$genus,
+                      species = labWater$motus$species)
 
-# aggregating the reads to the specified taxonomic level - family
-taxLevel <- "family"
-labFishFam <- metabaR::aggregate_motus(labFish, groups = labFish$motus[[taxLevel]])
-
-# merge FullDat to the metabar sample object
-labFishFam[["samples"]]["RowNames"] <- rownames(labFishFam[["samples"]])
-labFishFam[["samples"]] <- merge(
-  x = FullDat,
-  y = labFishFam[["samples"]],
-  by.x = "Ind",
-  by.y = "Num_prlvt_Euth",
-  all.y = TRUE
-)
-rownames(labFishFam[["samples"]]) <- labFishFam[["samples"]]$Ind
-rownames(labFishFam[["reads"]]) <- labFishFam[["samples"]][["Ind"]][match(rownames(labFishFam[["reads"]]), labFishFam[["samples"]]$RowNames)]
+# aggregating the reads to the specified taxonomic level - Phylum
+taxLevel <- "phylum"
+labWaterFam <- metabaR::aggregate_motus(labWater, groups = labWater$motus[[taxLevel]])
 
 # Convert to phyloseq object 
 ## makes otu table for phyloseq
 read.phylo <-
-  phyloseq::otu_table(t(labFishFam[["reads"]]), taxa_are_rows = T)
+  phyloseq::otu_table(t(labWaterFam[["reads"]]), taxa_are_rows = T)
 
 ## make sample table for phyloseq
-sample.phylo <- phyloseq::sample_data(labFishFam[["samples"]])
+sample.phylo <- phyloseq::sample_data(labWaterFam[["samples"]])
 
 ### merge phyloseq objects
 PhyloDat  <- 
   phyloseq::phyloseq(read.phylo, sample.phylo)
 
 ##################################################################################################
-# Test treatment effect on taxa (family level) relative abundance
+# Test treatment effect on taxa (Phylum level) relative abundance
 # using LINDA - https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02655-5 
 #################################################################################################
+PhyloDat@sam_data$ContPop <- ifelse(PhyloDat@sam_data$Pop %in% c("AUSCOR", "RIOU"), "C", "NC")
 
 # test differential abundance of taxa levels among treatment using LMM approach
 meta <- data.frame(Contam = factor(PhyloDat@sam_data$Contam),
                    Inj = factor(PhyloDat@sam_data$Inj),
                    Or = factor(PhyloDat@sam_data$ContPop),
-                   Pop = factor(PhyloDat@sam_data$Pop),
-                   Bac = factor(PhyloDat@sam_data$Bac),
-                   Size = PhyloDat@sam_data$Taille_mm_M,
-                   Sex = factor(PhyloDat@sam_data$Sexe),
-                   Session = factor(PhyloDat@sam_data$Session))
+                   Pop = factor(PhyloDat@sam_data$Pop))
 rownames(meta) <- rownames(PhyloDat@sam_data)
 
 # relevel the treatment
@@ -159,13 +123,6 @@ meta$Contam <- factor(meta$Contam, levels = c("NC", "C"))
 meta$Inj <- factor(meta$Inj, levels = c("PBS", "AMIX"))
 meta$Or <- factor(meta$Or, levels = c("NC", "C"))
 
-# remove the motus detected in less than 5 samples
-## it remove 17 families: 
-# "Acidothermaceae"     "Armatimonadaceae"    "Caedibacteraceae"    "Chthoniobacteraceae"
-# "Fimbriimonadaceae"   "Gallionellaceae"     "Gemmatimonadaceae"   "Hydrogenophilaceae" 
-# "Hymenobacteraceae"   "Lachnospiraceae"     "Methyloligellaceae"  "Micavibrionaceae"   
-# "Nitrosomonadaceae"   "Pedosphaeraceae"     "Sandaracinaceae"     "Solimonadaceae"     
-# "Sulfuricellaceae"
 toRemove <- which(apply(PhyloDat@otu_table, 1, function(x) length(which(x != 0 ))) <= 5)
 if(length(toRemove) != 0){
   PhyloDat@otu_table <- PhyloDat@otu_table[-toRemove,]
@@ -174,7 +131,7 @@ if(length(toRemove) != 0){
 linda.obj <- MicrobiomeStat::linda(feature.dat = as.data.frame(PhyloDat@otu_table), 
                                    meta.dat = meta,
                                    feature.dat.type = "count",
-                                   formula = "~ Contam + Inj + Or + Sex + Size + (1|Session/Bac) + (1|Pop)", 
+                                   formula = "~ Contam + Inj + Or", 
                                    alpha = 0.05, p.adj.method = "fdr",
                                    is.winsor = F,
                                    adaptive = T, 
@@ -183,8 +140,8 @@ linda.obj <- MicrobiomeStat::linda(feature.dat = as.data.frame(PhyloDat@otu_tabl
 # check the results 
 MicrobiomeStat::linda.plot(
   linda.obj,
-  c('ContamC', "InjLPS", "OrC", "SexI", "SexM"),
-  titles = c('Contam: NC vs C', 'Inj: PBS vs AMIX', 'Origin: NC vs C', 'Sex: F vs. I', 'Sex: F vs. M'),
+  c('ContamC', "InjLPS", "OrC"),
+  titles = c('Contam: NC vs C', 'Inj: PBS vs AMIX', 'Origin: NC vs C'),
   alpha = 0.05,
   lfc.cut = 0.5,
   legend = TRUE,
@@ -208,9 +165,6 @@ SignifRes <- Filter(function(x) nrow(x) > 0, SignifRes)
 ## rename variable
 names(SignifRes)[names(SignifRes) == "ContamC"] <- "Contamination (NC vs. C)"
 names(SignifRes)[names(SignifRes) == "InjAMIX"] <- "Imm. Chall. (PBS vs. AMIX)" 
-names(SignifRes)[names(SignifRes) == "SexI"] <- "Sex (F vs. I)"              
-names(SignifRes)[names(SignifRes) == "SexM"] <- "Sex (F vs. M)"                
-names(SignifRes)[names(SignifRes) == "Size"] <- "Size (cm)"
 names(SignifRes)[names(SignifRes) == "OrC"] <- "Origin (LP vs HP)"       
 
 ## round numeric value to 2 signbificant digits
@@ -233,13 +187,11 @@ table_data <- do.call(rbind, lapply(names(SignifRes), function(name) {
 }))
 table_data <- table_data[-which(is.na(table_data$padj)), ]
 
-rownames(table_data) <- sub("\\d+$", "", strings)
-
 ## Create the HTML table using kable and kableExtra
 html_table <-
   kableExtra::kbl(
     table_data,
-    caption = "<span style='font-size:12px; font-weight: bold; font-style: italic'>Differential abundance of Taxa at the family level - LINDA's Results </span>",
+    caption = "<span style='font-size:12px; font-weight: bold; font-style: italic'>Differential abundance of Taxa at the Phylum level - LINDA's Results </span>",
     format = "html",
     align = "c",
     escape = FALSE
@@ -273,13 +225,16 @@ if (length(list.dirs(file.path(DirSave, "Signif_Effects"))) == 0) {
 if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots"))) == 0) {
   dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots"))
 } 
-if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda"))) == 0) {
-  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda"))
+if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water"))) == 0) {
+  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water"))
+} 
+if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water", "TaxoLindaWater"))) == 0) {
+  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water", "TaxoLindaWater"))
 } 
 
 kableExtra::save_kable(modified_html_string, 
-                       file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda", 
-                                 paste0("TaxFamilyLindaTabSignif", ".HTML")))
+                       file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water", "TaxoLindaWater", 
+                                 paste0("TaxPhylumLindaWaterTabSignif", ".HTML")))
 
 # specify p value and log2 fold change threshold
 FcTresh <- c(-0.5,0.5)
@@ -375,10 +330,13 @@ if (length(list.dirs(file.path(DirSave, "Signif_Effects"))) == 0) {
 if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots"))) == 0) {
   dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots"))
 } 
-if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda"))) == 0) {
-  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda"))
+if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water"))) == 0) {
+  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water"))
 } 
-toSave <- file.path(savingDir, "Normalized_Data", "Signif_Effects", "Signif_Plots", "TaxoLinda", "Family_Contam.tif")
+if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water", "TaxoLindaWater"))) == 0) {
+  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "Water", "TaxoLindaWater"))
+} 
+toSave <- file.path(savingDir, "Normalized_Data", "Signif_Effects", "Signif_Plots", "Water", "TaxoLindaWater", "Phylum_Water_Contam.tif")
 if(file.exists(toSave)){
   unlink(toSave)
 }
@@ -399,8 +357,8 @@ volcanoPlot(
       linda.obj$output[[i]]$VolcanoGroups != "Log2FC" &
       linda.obj$output[[i]]$VolcanoGroups != "p-adj." 
   ), ]),
-  ylim = c(-5, 20),
-  xlim = c(-5, 5),
+  ylim = c(-5, 25),
+  xlim = c(-10, 10),
   ylab = bquote( ~ -Log[10] ~ 'p-adj.'),
   xlab = bquote( ~ Log[2] ~ 'fold change'),
   vlines = FcTresh,
@@ -413,10 +371,10 @@ volcanoPlot(
 leg <- c(min(cexPTS), max(cexPTS)/2, max(cexPTS))
 legValues <- ((leg - DotSize[1]) / (DotSize[2] - DotSize[1])) * 
   (maxVal - minVal) + minVal
-text(0.45, 19.65,"# of reads:", cex = 1.0)
+text(0.45, 24.65,"# of reads:", cex = 1.0)
 legend(
   x = 1.15,
-  y = 20.85,
+  y = 25.85,
   legend = round(legValues),
   horiz = T,
   pch = 16,
@@ -474,7 +432,7 @@ RelaAB_Plot_Contam_Top <-
 
 # save the plot
 toSave <- file.path(savingDir, "Normalized_Data", "Signif_Effects", "Signif_Plots", 
-                    "TaxoLinda", "EC_Contam_RelAb_Family_TOP.svg")
+                    "Water", "TaxoLindaWater", "EC_Contam_Water_RelAb_Phylum_TOP.svg")
 if(file.exists(toSave)){
   unlink(toSave)
 } 
@@ -519,9 +477,9 @@ tmp_merged_Nonsignif <- tmp_merged_Nonsignif[, c("Group.1", "variable", "value",
 tmp_merged <- rbind(tmp_merged_signif, tmp_merged_Nonsignif)
 tmp_merged <- merge(tmp_merged,
                     taxSignif[, c("taxa", "colors")],
-                     by.x = "variable",
-                     by.y = "taxa",
-                     all.x = T)
+                    by.x = "variable",
+                    by.y = "taxa",
+                    all.x = T)
 tmp_merged$colors[which(is.na(tmp_merged$colors))] <- adjustcolor("#808080", alpha.f = 0.5)
 
 # Plot 
@@ -540,177 +498,13 @@ RelaAB_Plot_Contam_signif <-
 
 # save the plot
 toSave <- file.path(savingDir, "Normalized_Data", "Signif_Effects", "Signif_Plots", 
-                    "TaxoLinda", "EC_Contam_RelAb_Family_Signif.svg")
+                    "Water", "TaxoLindaWater", "EC_Contam_Water_RelAb_Phylum_Signif.svg")
 if(file.exists(toSave)){
   unlink(toSave)
 } 
 ggplot2::ggsave(
   file = toSave,
   plot = RelaAB_Plot_Contam_signif,
-  width = 9,
-  height = 6,
-  dpi = 300
-)
-
-## for Sex (only between F and M since there is no difference with I)
-i = "SexM"
-linda.obj$output[[i]]$VolcanoGroups <- rep(NA, nrow(linda.obj$output[[i]]))
-
-# specify non significant OTU
-linda.obj$output[[i]]$VolcanoGroups[which(
-  linda.obj$output[[i]]$log2FoldChange > FcTresh[1] &
-    linda.obj$output[[i]]$log2FoldChange < FcTresh[2] &
-    -log10(linda.obj$output[[i]]$padj) < pTresh
-)] <- "NS"
-
-# specify OTU above pvalue
-linda.obj$output[[i]]$VolcanoGroups[which(
-  -log10(linda.obj$output[[i]]$padj) > pTresh
-)] <- "p-adj."
-
-# specify OTU above Log2 FC
-linda.obj$output[[i]]$VolcanoGroups[which(
-  linda.obj$output[[i]]$log2FoldChange <= FcTresh[1] |
-    linda.obj$output[[i]]$log2FoldChange >= FcTresh[2]
-)] <- "Log2FC"
-
-# specify significant OTU
-linda.obj$output[[i]]$VolcanoGroups[which(
-  linda.obj$output[[i]]$log2FoldChange <= FcTresh[1] &
-    -log10(linda.obj$output[[i]]$padj) > pTresh |
-    linda.obj$output[[i]]$log2FoldChange >= FcTresh[2] &
-    -log10(linda.obj$output[[i]]$padj) > pTresh
-)] <- "p-adj. & Log2FC"
-
-# append specified colors to significance thresholds
-linda.obj$output[[i]]$colors = colors[as.character(linda.obj$output[[i]]$VolcanoGroups)]  
-
-# retrieve total number of reads per tax level and rescale them to specify dot size in the plot
-linda.obj$output[[i]][["readsCount"]] <- apply(PhyloDat@otu_table, 1, function(x) sum(x, na.rm = T))
-DotSize <- c(1, 6)
-maxVal <- max(linda.obj$output[[i]][["readsCount"]])
-minVal <- min(linda.obj$output[[i]][["readsCount"]])
-normVal <- (linda.obj$output[[i]][["readsCount"]] - 
-              minVal) / (maxVal - minVal)
-cexPTS <- DotSize[1] + normVal * (DotSize[2] - DotSize[1])
-
-# draw the volcano plot
-if (length(list.dirs(file.path(savingDir, "Normalized_Data"))) == 0) {
-  dir.create(file.path(savingDir, "Normalized_Data"))
-}
-DirSave <- file.path(savingDir, "Normalized_Data")
-if (length(list.dirs(file.path(DirSave, "Signif_Effects"))) == 0) {
-  dir.create(file.path(DirSave, "Signif_Effects"))
-}
-if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots"))) == 0) {
-  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots"))
-} 
-if (length(list.dirs(file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda"))) == 0) {
-  dir.create(file.path(DirSave, "Signif_Effects", "Signif_Plots", "TaxoLinda"))
-} 
-toSave <- file.path(savingDir, "Normalized_Data", "Signif_Effects", "Signif_Plots", "TaxoLinda", "Family_SexFvsM.tif")
-if(file.exists(toSave)){
-  unlink(toSave)
-}
-grDevices::tiff(filename = toSave,
-                width = 1200,
-                height = 1200,
-                res = 180,
-                compression = "lzw",
-                pointsize = 14)
-volcanoPlot(
-  x = linda.obj$output[[i]]$log2FoldChange,
-  y = -log10(linda.obj$output[[i]]$padj),
-  group = linda.obj$output[[i]]$VolcanoGroups,
-  col = linda.obj$output[[i]]$colors,
-  labels = rownames(linda.obj$output[[i]]),
-  selLabels = rownames(linda.obj$output[[i]][which(
-    linda.obj$output[[i]]$VolcanoGroups != "NS" &
-      linda.obj$output[[i]]$VolcanoGroups != "Log2FC" &
-      linda.obj$output[[i]]$VolcanoGroups != "p-adj." 
-  ), ]),
-  ylim = c(-1, 5),
-  xlim = c(-1.5, 1.5),
-  ylab = bquote( ~ -Log[10] ~ 'p-adj.'),
-  xlab = bquote( ~ Log[2] ~ 'fold change'),
-  vlines = FcTresh,
-  hlines = pTresh,
-  cex.lab = 1.2,
-  leg.order = c("NS", "p-adj.","Log2FC", "p-adj. & Log2FC"),
-  cex.pts = cexPTS
-)
-# add legend for dot size (number of reads)
-leg <- c(min(cexPTS), max(cexPTS)/2, max(cexPTS))
-legValues <- ((leg - DotSize[1]) / (DotSize[2] - DotSize[1])) * 
-  (maxVal - minVal) + minVal
-text(-1.2, 4.35,"# of reads:", cex = 1.0)
-legend(
-  x = -0.9,
-  y = 4.65,
-  legend = round(legValues),
-  horiz = T,
-  pch = 16,
-  col = adjustcolor("#000000", alpha.f = 0.8),
-  pt.bg =  adjustcolor("#000000", alpha.f = 0.8),
-  pt.cex = leg,
-  #y.intersp = c(1, 2, 4),
-  x.intersp = c(1, 1, 2),
-  text.width = c(0.2, 0.6, 0.6),
-  bty = "n"
-)
-dev.off()
-
-## for Sex (Male vs female) and for the 15 top phylum (there is only 13 here)
-# Aggregate per treatment
-NFunc <- 15 # number of level to display
-
-tmp <-
-  reshape2::melt(stats::aggregate(t(PhyloDat@otu_table), by = list(
-    meta$Sex), sum))
-
-# Sorting and selecting top Ntax abundant MOTUS
-summedDat <- stats::aggregate(value ~ variable, data = tmp, FUN = sum)
-Top <- summedDat[order(summedDat$value, decreasing = T), ][1:NFunc, ]
-
-# keep only the top Ntax abundant MOTUS
-tmpTop <- tmp[which(tmp[["variable"]] %in% Top[["variable"]]),]
-
-# Splitting the dataframe
-tmp_F <- tmpTop[tmpTop$Group.1 == "F", ]
-tmp_M <- tmpTop[tmpTop$Group.1 == "M", ]
-
-# compute relative abundances
-tmp_F$Relvalue <- tmp_F$value/sum(tmp_F$value)
-tmp_M$Relvalue <- tmp_M$value/sum(tmp_M$value)
-
-# Merging the dataframes
-tmp_merged <- rbind(tmp_F, tmp_M)
-
-# Plot 
-newOrder <- c("F", "M")
-tmp_merged[["SexOrd"]] <- factor(tmp_merged[["Group.1"]], levels = newOrder)
-
-nb.cols <- NFunc
-RelaAB_Plot_Sex_Top <-
-  ggplot2::ggplot(tmp_merged,
-                  ggplot2::aes(x = SexOrd, y = Relvalue, fill = variable)) +
-  ggplot2::geom_bar(stat = "identity") +
-  ggplot2::labs(x = NULL, y = "Relative abundance", fill = "Taxa")  + ggplot2::theme_bw() +
-  ggplot2::scale_fill_manual(values = colorsTax) +
-  ggplot2::theme_classic() +
-  ggplot2::theme(text = ggplot2::element_text(size=20)) +
-  ggplot2::ggtitle("")
-
-# save the plot
-toSave <- file.path(savingDir, "Normalized_Data", "Signif_Effects", 
-                    "Signif_Plots", "TaxoLinda", "EC_Sex_RelAb_Family_TOP.svg")
-
-if(file.exists(toSave)){
-  unlink(toSave)
-} 
-ggplot2::ggsave(
-  file = toSave,
-  plot = RelaAB_Plot_Sex_Top,
   width = 9,
   height = 6,
   dpi = 300

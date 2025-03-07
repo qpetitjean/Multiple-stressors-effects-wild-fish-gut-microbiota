@@ -1,12 +1,55 @@
-##############################################################################################################
-#  check whether results are consistent among normalization and PCOA vs NMDS methods                        #
-#############################################################################################################
+# Script Title: Consistency Check among Normalization Methods and Ordination Approaches (PCOA vs NMDS) 
+#              for Diversity Analyses in Fish Gut Microbiota
+#
+# Author: Quentin PETITJEAN
+# Date Created: 03/2023
+# Last Modified: 05/05/2024
+# ==============================================================================
+# Requirements:
+# - R version 4.2.3
+# - Packages:
+#   - ggplot2 v3.4.0: For generating publication-quality plots.
+# ==============================================================================
+# Script Overview:
+# This script checks whether the results are consistent among different normalization 
+# methods and between ordination approaches (PCOA vs NMDS) applied to the fish gut microbiota 
+# dataset. The analysis is conducted over both alpha and beta diversity measures using 
+# linear mixed models (LMM), Envfit, and betadisper frameworks. The workflow includes:
+#
+# 1. Specifying file paths and importing experimental design data and precomputed analysis 
+#    outputs (LMM, Envfit, and Betadisper results).
+# 2. Extracting and grouping results from LMM analyses for alpha diversity and beta diversity 
+#    (from both PCOA and NMDS ordinations) into summary data frames.
+# 3. Plotting treatment and covariate effects (with significance indicators) on diversity 
+#    measures using bar plots.
+# 4. Comparing the outcomes across normalization methods and between the two ordination 
+#    techniques (PCOA vs NMDS) to assess result consistency.
+# 5. Generating and saving effect plots (in SVG format) for further 
+#    interpretation and reporting.
+#
+# ==============================================================================
+# Usage:
+# 1. Update the 'savingDir' variable to point to the directory containing both the input 
+#    and output files.
+# 2. Ensure that all required input files (e.g., LMMAlphaDivRes.rds, LMMRes.rds, EnvfitRes.rds, 
+#    BetaDispRes.rds) are present in the specified directories.
+# 3. Install and load the required R packages if they are not already installed.
+# 4. Run the script in an R environment to generate effect plots.
+# 5. The outputs include SVG plots displaying effect sizes and significance for various diversity indices.
+# ==============================================================================
+
+##############################################
+#       	Install needed packages            #
+##############################################
+if(!require(ggplot2)){
+  install.packages("ggplot2")
+}
 
 #######################
 # specify some path   #
 #######################
 # the path to the directory from where file should be both imported and saved
-savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs/Normalized_Data/Signif_Effects"
+savingDir <- "W:/POSTDOC_INP_GOLFECH_2023/Outputs/Normalized_Data/Signif_Effects"
 
 #############################################################################################################
 # Effect of treatments and covariates on alpha diversity tested within LMM framework                        #

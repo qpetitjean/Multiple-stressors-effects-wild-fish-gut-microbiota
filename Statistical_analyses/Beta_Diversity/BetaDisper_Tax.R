@@ -1,17 +1,68 @@
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GutMicrobiome/BxpltFunc.R")
+# Script Title: Test Homogeneity of Variance among Treatment Groups Using betadisper in fish gut microbiota
+#      
+# Author: Quentin PETITJEAN
+# Date Created: 03/2023
+# Last Modified: 10/01/2024
+# ==============================================================================
+# Requirements:
+# - R version 4.2.3
+# - Packages:
+#   - vegan v2.6-4: For computing betadisper, running permutation tests, and environmental fitting.
+#   - kableExtra v1.3.4: For creating enhanced HTML summary tables of statistical results.
+# - Source Files:
+#   - BxpltFunc.R: Custom function to generate customized boxplots.
+# ==============================================================================
+# Script Overview:
+# This script tests the homogeneity of variance among treatment groups in the fish gut 
+# microbiota dataset using the betadisper function from the vegan package. The workflow
+# includes:
+#
+# 1. Specifying file paths for input data and output directories.
+# 2. Importing experimental design data (DesignData.csv), a precomputed distance matrix
+#    (DistMatrices.RDS), and scaled ordination coordinates (BetaDivCoords.RDS).
+# 3. Importing LMM results (LMMRes.rds) to extract significant treatment effects.
+# 4. Iteratively computing betadisper and running permutation tests (with FDR adjustments)
+#    for each significant effect identified (e.g., Contam, Inj, ContPop).
+# 5. Generating and saving customized boxplots (TIFF format) to visualize the dispersion 
+#    of samples relative to their group medians.
+# 6. Summarizing the betadisper test results in HTML tables and saving all outputs (including 
+#    the betadisper results as an RDS file) for further analysis.
+#
+# ==============================================================================
+# Usage:
+# 1. Ensure that the required input files (DesignData.csv, DistMatrices.RDS, BetaDivCoords.RDS, LMMRes.rds)
+#    are available in the specified directory (savingDir).
+# 2. Update the 'savingDir' variable to reflect your local directory structure.
+# 3. Install and load all required R packages before running the script.
+# 4. Run the script in an R environment; outputs (plots, HTML tables, and RDS file) will be saved 
+#    in the designated directories.
+# ==============================================================================
 
-##############################################################################################################
-#  Test homogeneity of variance among treatments group using betadisper                                      #
-##############################################################################################################
+
+##############################################
+#       	Install needed packages            #
+##############################################
+
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+}
+if(!require(vegan)){
+  install.packages("vegan")
+}
 
 #######################
 # specify some path   #
 #######################
-# the path to the directory from where file should be both imported
-savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
+# the path to the directory from where file should be both imported and saved
+savingDir <- "w:/POSTDOC_INP_GOLFECH_2023/Outputs"
 
 # directory where the output files should be saved
 DirSave <- file.path(savingDir, "Normalized_Data")
+
+##############################################
+#   Import some custom functions             #
+##############################################
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/BxpltFunc.R") # import a function compute draw customized boxplots
 
 #######################
 # Import the data     #
@@ -19,13 +70,13 @@ DirSave <- file.path(savingDir, "Normalized_Data")
 
 # import the full dataset from the experiment (treatment & behavioral & physiological measures)
 FullDat <-
-  read.csv2(file.path(savingDir, "Varia_contam_fullv5.csv"), dec = ".", sep = ";")
+  read.csv2(file.path(savingDir, "Data/DesignData", "DesignData.csv"), dec = ".", sep = ";")
 
 # import the distance matrix according to the beta diversity indices selected 
-DistList <- readRDS(file.path(savingDir, "Normalized_Data/DistMatrices.RDS"))
+DistList <- readRDS(file.path(DirSave, "DistMatrices.RDS"))
 
 # import the scaled coordinates of the samples in a 2d space (PCOA or NMDS), derived from the distance matrix
-BetaDivCoords <- readRDS(file.path(savingDir, "Normalized_Data/BetaDivCoords.RDS"))
+BetaDivCoords <- readRDS(file.path(DirSave, "BetaDivCoords.RDS"))
 
 # import the results of the LMM approach on beta diversity indices
 LMMRes <- readRDS(file.path(DirSave, "Signif_Effects", "LMMRes.rds"))
@@ -63,6 +114,7 @@ for(j in toKeep) {
   if (is.character(TempDist[[j]]) | is.factor(TempDist[[j]])) {
     groups <-
       TempDist[match(labels(DistList[[i]][[k]]), TempDist[["Ind"]]), ]
+    rownames(groups) <- groups[["Ind"]]
     
     betadispRes[[i]][[k]][[j]][["betaDisper"]] <-
       vegan::betadisper(
@@ -117,7 +169,7 @@ for(j in toKeep) {
     if(file.exists(toSave)){
       unlink(toSave)
     } 
-    if(j == "Contam"){
+    if(j == "Contam" | j == "ContPop"){
     newOrder <- c("NC", "C")
     } else if(j == "Inj") {
       newOrder <- c("PBS", "AMIX")
@@ -155,7 +207,7 @@ for(j in toKeep) {
 }
 
 saveRDS(betadispRes, file = file.path(DirSave, "Signif_Effects", "BetaDispRes.rds"), compress = TRUE)
-
+#betadispRes <- readRDS(file.path(DirSave, "Signif_Effects", "BetaDispRes.rds"))
 
 ################################################################
 # summarize the results in html table for each normalization   #
@@ -338,7 +390,7 @@ seRA <- stats::aggregate(df$dist, list(df$group), FUN = function(x) sd(x, na.rm 
   stats::aggregate(df$dist, list(df$group), function(x)
     sqrt(sum(!is.na(x))))$x
 
-## For "Robust.Aitchison" in contamination treatment
+## For "Robust.Aitchison" according to sex
 df <- data.frame(dist = betadispRes[[dataNorm]][["Robust.Aitchison"]]$Sexe$betaDisper$distances,
                  group = betadispRes[[dataNorm]][["Robust.Aitchison"]]$Sexe$betaDisper$group)
 
@@ -349,12 +401,12 @@ seRA <- stats::aggregate(df$dist, list(df$group), FUN = function(x) sd(x, na.rm 
 
 p <- betadispRes[[dataNorm]][["Robust.Aitchison"]]$Sexe$FDRadjustedP
 
-## For "Hellinger" in contamination treatment
+## For "Hellinger" according to sex
 df <- data.frame(dist = betadispRes[[dataNorm]][["Hellinger"]]$Sexe$betaDisper$distances,
                  group = betadispRes[[dataNorm]][["Hellinger"]]$Sexe$betaDisper$group)
 
-meanRA <- stats::aggregate(df$dist, list(df$group), FUN = function(x) mean(x, na.rm = T))
-seRA <- stats::aggregate(df$dist, list(df$group), FUN = function(x) sd(x, na.rm = T))$x /
+meanHe <- stats::aggregate(df$dist, list(df$group), FUN = function(x) mean(x, na.rm = T))
+seHe <- stats::aggregate(df$dist, list(df$group), FUN = function(x) sd(x, na.rm = T))$x /
   stats::aggregate(df$dist, list(df$group), function(x)
     sqrt(sum(!is.na(x))))$x
 

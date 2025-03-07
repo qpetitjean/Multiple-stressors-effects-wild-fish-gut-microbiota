@@ -1,16 +1,71 @@
 ##############################################################################################################
-#  Compute Alpha diversity indices and test treatments effects using LMM and dredge method                   #
-#############################################################################################################
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/multiNorm.R") # import a function used to compute multiple normalization methods
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/DredgedLMM.R")  # import a function used to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/alphaDiv.R") # import a function compute alpha diversity indices from a matrix containing read counts per sample
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GutMicrobiome/BxpltFunc.R") # import a function compute draw customized boxplots
+# Script Title: Compute Alpha Diversity on PICRUSt2 Functional Inference Results and Test Treatment Effects
+#
+# Author: Quentin PETITJEAN
+# Date Created: 13/12/2023
+# Last Modified: 13/12/2023
+# ==============================================================================
+# Requirements:
+# - R version 4.2.3 (or compatible)
+# - Packages:
+#     • metabaR: For processing and subsetting metabarcoding datasets.
+#     • readr: For reading in TSV files (e.g., PICRUSt2 outputs).
+#     • kableExtra: For creating enhanced HTML summary tables.
+#
+# Custom Functions:
+#     • multiNorm.R: Computes multiple normalization methods on count matrices.
+#     • DredgedLMM.R: Runs linear mixed models with model dredging to extract model summaries,
+#       ANOVA tables, and R² values.
+#     • alphaDiv.R: Computes alpha diversity indices (e.g., Richness, Shannon, Simpson) from count data.
+#     • BxpltFunc.R: Generates customized boxplots.
+#
+# Overview:
+# This script integrates PICRUSt2 enzyme classification pathway predictions with sample metadata 
+# to compute alpha diversity indices on functional inference results. The workflow includes:
+#   1. Importing experimental design data and a cleaned metabar object (fish gut samples).
+#   2. Importing PICRUSt2 output (EC - Metacyc - pathways with descriptions) and adjusting pathway IDs.
+#   3. Merging functional inference data with sample metadata.
+#   4. Applying multiple normalization methods to the functional count data.
+#   5. Computing alpha diversity indices (Richness, Shannon, Simpson) on normalized data.
+#   6. Testing treatment effects (e.g., Contamination, Injection, Population, Sex, Size) on 
+#      functional alpha diversity using LMM and model dredging.
+#   7. Generating diagnostic plots and exporting HTML summary tables of the LMM results.
+#
+# Usage:
+#   • Update the 'savingDir' variable to point to the correct input/output directory.
+#   • Ensure all required packages and custom functions are installed and accessible.
+#   • Run this script in an R environment to perform normalization, compute alpha diversity,
+#     and test treatment effects on functional inference data.
+#   • Output files (plots, RDS objects, and HTML tables) will be saved in the specified directories.
+##############################################################################################################
+
+##############################################
+#       	Install needed packages            #
+##############################################
+
+if(!require(metabaR)){
+  install.packages("metabaR")
+}
+if(!require(readr)){
+  install.packages("readr")
+}
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+}
 
 #######################
 # specify some path   #
 #######################
 # the path to the directory from where file should be both imported and saved
-savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
+savingDir <- "w:/POSTDOC_INP_GOLFECH_2023/Outputs"
+
+##############################################
+#       	Import some custom functions       #
+##############################################
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/multiNorm.R") # import a function used to compute multiple normalization methods
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/DredgedLMM.R")  # import a function used to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/alphaDiv.R") # import a function compute alpha diversity indices from a matrix containing read counts per sample
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/BxpltFunc.R") # import a function compute draw customized boxplots
 
 #######################
 # Import the data     #
@@ -18,7 +73,7 @@ savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
 
 # import the full dataset from the experiment (treatment & behavioral & physiological measures)
 FullDat <-
-  read.csv2(file.path(savingDir, "Varia_contam_fullv5.csv"), dec = ".", sep = ";")
+  read.csv2(file.path(savingDir, "DesignData.csv"), dec = ".", sep = ";")
 
 # import the cleaned dataset (metabaR object) and select only gut samples
 labFish <- readRDS(file.path(savingDir, "Preprocessing-Metabar/fguts_Bact_agg_MergedRep.RDS"))
@@ -42,7 +97,7 @@ rownames(labFish[["reads"]]) <- labFish[["samples"]][["Ind"]][match(rownames(lab
 # import Picrust2 results
 ###############################################################
 ## import EC data including description column (tibble)
-ECPath <-  as.data.frame(readr::read_tsv(file.path(savingDir, "Picrust2Output/EC_pathways_out/pred_metagenome_unstrat_descrip.tsv.gz")))
+ECPath <-  as.data.frame(readr::read_tsv(file.path(savingDir, "FunctionalInferences/Picrust2Output/EC_pathways_out/pred_metagenome_unstrat_descrip.tsv.gz")))
 
 # manual change of the PWY-5182 and ARGORNPROST-PWY pathways which are not found in the Metacyc db 
 # but found trough manual search using description given by picrust2 
@@ -514,10 +569,10 @@ Bxplt(
   ),
   colpts = FinalDat$original.log[["Contam_col"]],
   boxwex = 0.5,
-  ylab = "Richness (# of MOTUs)",
+  ylab = "Richness (# of functions)",
   cex.axis = 0.9,
-  ymin = 0,
-  yscale = c(0, 150, 300, 450)
+  ymin = 125,
+  yscale = c(125, 200, 275, 350, 425)
 )
 dev.off()
 
@@ -549,7 +604,7 @@ for(i in seq_along(indices)){
     main = indices[i],
     colpts = FinalDat$original.log[["Contam_col"]],
     boxwex = 0.5,
-    ylab = ifelse(i == 1, "Richness (# of MOTUs)", ""),
+    ylab = ifelse(i == 1, "Richness (# of functions)", ""),
     cex.axis = 0.9,
     ymin = 0,
     yscale = 6

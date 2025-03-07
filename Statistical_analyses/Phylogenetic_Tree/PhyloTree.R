@@ -1,3 +1,70 @@
+# Script Title: Phylogenetic Tree Construction for 16s Sequences
+#      
+# Author: Quentin PETITJEAN
+# Date Created: 03/2023
+# Last Modified: 25/10/2023
+# ==============================================================================
+# Requirements: 
+# - R version 4.2.3
+# - Packages: 
+#   - metabaR v1.0.0: For converting metabar data to FASTA format.
+#   - Biostrings v2.66.0: For reading and writing DNA sequence data.
+#   - DECIPHER v2.26.0: For aligning and adjusting DNA sequences.
+#   - phangorn v2.11.1: For constructing and optimizing phylogenetic trees.
+#   - ape v5.7-1: For tree manipulation and file output.
+#   - ggtree v3.6.2: For phylogenetic tree visualization.
+#   - ggplot2 v3.5.1: For enhanced plotting capabilities.
+#   - viridis v0.6.3: For color scaling in plots.
+# ==============================================================================
+# Script Overview:
+# This script builds a phylogenetic tree from 16s sequence data through the following steps:
+# 1. Importing cleaned metabar data and converting it to FASTA format.
+# 2. Aligning and adjusting the FASTA sequences.
+# 3. Constructing an initial tree using the neighbor-joining method and evaluating multiple 
+#    nucleotide substitution models.
+# 5. Optimizing the maximum likelihood tree (including topology, branch lengths, and model parameters).
+# 6. Assessing tree performance via AIC, bootstrap analyses, and various statistical tests.
+# 7. Saving the final tree in Newick format and visualizing it with taxonomic annotations.
+#
+# ==============================================================================
+# Usage:
+# 1. Set the 'savingDir' variable to the directory containing your input files.
+# 2. Ensure that the cleaned metabar data (fguts_Bact_agg_MergedRep.RDS) is available in the specified directory.
+# 3. Run the script in an R environment to generate and visualize the phylogenetic tree.
+# 4. The script outputs:
+#    - A Newick tree file ("PhyloTree.nwk") containing the final tree.
+#    - A visual tree plot ("phyloTree.svg") with taxonomic annotations.
+# ==============================================================================
+
+##############################################
+#       	Install needed packages            #
+##############################################
+
+if(!require(metabaR)){
+  install.packages("metabaR")
+}
+if(!require(Biostrings)){
+  install.packages("Biostrings")
+}
+if(!require(DECIPHER)){
+  install.packages("DECIPHER")
+}
+if(!require(phangorn)){
+  install.packages("phangorn")
+}
+if(!require(ape)){
+  install.packages("ape")
+}
+if(!require(ggtree)){
+  install.packages("ggtree")
+}
+if(!require(ggplot2)){
+  install.packages("ggplot2")
+}
+if(!require(viridis)){
+  install.packages("viridis")
+}
+
 ##########################################################
 #  build the phylogenetic tree of 16s sequences          #
 #########################################################
@@ -9,11 +76,11 @@
 savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
 
 ######################################################################################
-# Convert the Metabar data to faste sequences and aligned the sequences              #
+# Convert the Metabar data to fasta sequences and aligned the sequences              #
 ######################################################################################
 
 # import the cleaned data
-metabarDat <- readRDS(file.path(savingDir, "Preprocessing-Metabar", "fguts_Bact_agg_MergedRep.RDS"))
+metabarDat <- readRDS(file.path(savingDir, "Data/CleanedData", "fguts_Bact_agg_MergedRep.RDS"))
 
 # save the dataset as fasta
 metabaR::fasta_generator(metabarDat,

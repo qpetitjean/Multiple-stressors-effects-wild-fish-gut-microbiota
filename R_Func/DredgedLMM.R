@@ -1,10 +1,60 @@
-#############################################################################################################################################################################################
-# This is function aims to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)                                  #
-# Title: 
-# author:  "Quentin PETITJEAN[q.petitjean1@gmail.com]                                                                                                                                       #
-# date: "15/06/2023"                                                                                                                                                                        #
-#############################################################################################################################################################################################
-
+#' Retrieve Model Summary, ANOVA, and R-squared via Model Dredging
+#'
+#' @description
+#' \code{DredgedLMM} fits a full mixed effects model using \code{lmer} from the \pkg{lme4} package and
+#' then performs model selection using the \code{dredge} function from the \pkg{MuMIn} package. Depending on the
+#' specified method, it selects the final model among those with a delta value below 2 either by the highest weight ("weight")
+#' or by the lowest ranking criterion ("parsimony"). The function refits the model using the selected predictors and returns a list
+#' containing the sample sizes, the final model, its summary, a Type III ANOVA table (via \pkg{car}), and the marginal and conditional
+#' R-squared values.
+#'
+#' @param Data A data frame containing the dataset to be modeled.
+#' @param expVar A character string specifying the response variable.
+#' @param respExpr A character string specifying the fixed-effects portion of the model (including main effects and interaction terms).
+#' @param random A character string specifying the random effects structure (e.g., "(1 | Session/Bac) + (1 | Pop)").
+#' @param rank A character string specifying the ranking criterion for model selection (default is "AICc").
+#' @param method A character string indicating the method for final model selection when several candidate models have delta values below 2.
+#'        Options are "weight" (select the model with the highest weight) or "parsimony" (select the model with the lowest rank value).
+#'
+#' @return A list with the following components:
+#' \describe{
+#'   \item{SampleSize}{A data frame reporting sample sizes for each predictor variable included in the final model.}
+#'   \item{ModL}{The final refined mixed effects model (an object of class \code{lmerMod}).}
+#'   \item{ModSum}{The summary of the final model.}
+#'   \item{ModAnov}{The Type III ANOVA table for the final model.}
+#'   \item{Rsquared}{A numeric vector containing the marginal and conditional R-squared values as computed by \code{MuMIn::r.squaredGLMM}.}
+#' }
+#'
+#' @details
+#' \code{DredgedLMM} first filters the input data to exclude missing values in the response variable.
+#' A full model is then fitted using the formula constructed from the response variable, the specified fixed effects, and random effects.
+#' Model selection is performed with \code{MuMIn::dredge}, and if multiple models have a delta ranking below 2,
+#' the final model is chosen based on the selected method ("weight" or "parsimony"). The chosen predictors are then used
+#' to refit the model using REML = TRUE, and the function returns the refined model along with its summary, ANOVA table,
+#' and R-squared values.
+#'
+#' **Dependencies:**
+#' This function depends on several packages. It internally calls functions from:
+#' \itemize{
+#'   \item \strong{lme4} (for linear mixed model - LMM - model fit),
+#'   \item \strong{MuMIn} (for model selection and r2 computation),
+#'   \item \strong{car} (for p-value computation from LMM)
+#' }
+#'
+#' For reproducibility, please ensure that the required packages are installed and loaded.
+#' Although not ideal to load packages within a function, the following libraries are explicitly 
+#' loaded here to ensure that all dependent functions are available:
+#'
+#' @importFrom lme4 lmer
+#' @importFrom MuMIn dredge r.squaredGLMM
+#' @importFrom car Anova 
+#' 
+#' @author Quentin PETITJEAN [quentin.petitjean@inrae.fr]
+#'
+#' @date 15/06/2023
+#' 
+#' @export
+ 
 DredgedLMM <- function(Data = NULL, # a dataframe containing the data to model
                        expVar = NULL, # the explainatory variable
                        respExpr = NULL, # the full set of response variables, including interactions terms

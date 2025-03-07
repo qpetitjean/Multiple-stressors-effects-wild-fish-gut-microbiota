@@ -5,38 +5,170 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota)
 ![GitHub repo size](https://img.shields.io/github/repo-size/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota)
 
-This repository contains the scripts used to manage the data and test the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, _Gobio Occitaniae_). These results are discussed in the following manuscript: 
+This repository contains:
+<ul>
+<li>Some R useful R function to allow some computations, model selection and reproduce the visualization of the results within the `R_Func` directory</li>
+<li>The R script used to preprocess, clean, and analyse the data within the `Statistical_analyses` directory</li>
+</ul><br />
+Files and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, _Gobio Occitaniae_). These results are discussed in the following manuscript: <br />
 
-PETITJEAN, Q., GRANADA, M., JEAN, S., MANZI S., VEYSSIERE C., PERRAULT, A., COUSSEAU, M., LAFFAILLE P., WHITE J., JACQUIN, L., 2023. Environmentally relevant metal contamination levels affect gut microbiota composition in wild fish populations (_Gobio Occitaniae_).
+>PETITJEAN, Q., GRANADA, M., JEAN, S., MANZI S., VEYSSIERE C., PERRAULT, A., COUSSEAU, M., LAFFAILLE P., WHITE J., JACQUIN, L., (Submitted). Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish.<br /><br />
+Preprint is available
+here:<br /><......>
+<br />
 
-## step by step procedure to reproduce the analyses:
+## Step by step procedure to reproduce the analyses:
+
+<u>NB:</u> Before skimming trough the following scripts, check the list of R packages to install below. 
+
 ### Data preparation
-0- download the raw dataset\* from the figshare repository: 
-1- clean the dataset using Stats_MetabaRLab_MergedRep.R
-2- construct the phylogenetic tree using PhyloTree.R 
+<ol start="1">
+<li>Download the raw and cleaned dataset\* from the figshare repository (`Data` directory) available here: 10.6084/m9.figshare.28554470 </li><br />
+
+<li>Clean the dataset using `Statistical_analyses/Data_pre-processing_MetabaR/Stats_MetabaRLab_MergedRep.R` <br />
+<u>NB:</u> Optional, the cleaned dataset is available in `Data/CleanedData` as `fguts_Bact_agg_MergedRep.RDS`) </li><br />
+
+<li>Construct the phylogenetic tree using `Statistical_analyses/Phylogenetic_Tree/PhyloTree.R` <br />
+<u>NB:</u> Optional, the phylogenetic tree is available in `Data/PhyloTree`</li><br />
+</ol>
 
 ### Analyses conducted on MOTUs
-3- compute and test (LMM) alpha diversity metrics on fish gut microbiota using AlphaDivLMM_MOTUs.R and water microbiota using AlphaDivLMM_Water.R
-4- compute and test (LMM & envfit) beta diversity metrics on fish gut microbiota using BetaDivLMM_MOTUs.R and water microbiota using BetaDivLM_Water.R
-5- compute and test (betadisper) variance homogeneity of beta diversity metrics on fish gut microbiota  using BetaDisper_Tax.R
-6 (optional)- check whether results are consistent across normalization, ordination methods, and indices using ExtractNormRes.R
-7- Test treatments and covariates effects on Taxonomic differential abundance using Linda (LMM) using LINDA_TaxComp_Family.R and LINDA_TaxComp_Phylum.R to perform analysis at the family and phylum level, respectively.
+<ol start="4">
+<li>Compute and test (LMM) alpha diversity metrics on:
+<ul>
+ <li>Fish gut microbiota using `Statistical_analyses/Alpha_Diversity/AlphaDivLMM_MOTUs.R`</li>
+ <li>Water microbiota using `Statistical_analyses/Alpha_Diversity/AlphaDivLMM_Water.R` </li>
+  </li>
+ </ul><br />
+ 
+<li>Compute and test (LMM & envfit) beta diversity metrics on:
+<ul>
+ <li>Fish gut microbiota using `Statistical_analyses/Beta_Diversity/BetaDivLMM_MOTUs.R`</li>
+ <li>Water microbiota using `Statistical_analyses/Beta_Diversity/BetaDivLM_Water.R`</li>
+  </li>
+ </ul><br />
 
+<li>Compute and test (betadisper) variance homogeneity of beta diversity metrics on fish gut microbiota using `Statistical_analyses/Beta_Diversity/BetaDisper_Tax.R` </li><br />
 
-8- ratios....................
+<li>Check whether results are consistent across normalization, ordination methods, and indices using `Statistical_analyses/Check_Normalization/ExtractNormRes.R` <br />
+<u>NB:</u> Optional, this step is not mandatory to perform the next steps</li><br />
+
+<li>Test treatments and covariates effects on Taxonomic differential abundance using Linda (LMM) on:
+<ul>
+ <li>Fish gut microbiota at:</li> 
+ <ul>
+  <li>The family level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Family.R`</li> 
+  <li>The phylum level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Phylum.R`</li>
+ </ul>
+ <li>Water microbiota at:</li> 
+ <ul>
+  <li>The family level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Family_water.R`</li> 
+  <li>The phylum level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Phylum_water.R`</li>
+ </ul>
+  </li>
+ </ul><br />
+
+<li>Compute and test common taxonomic levels ratios indicating dysbiosis such as Bacteroidota/Proteobacteria and Firmicutes/Bacteroidota ratio using `Statistical_analyses/Taxonomic_analysis/Dysbiosis_Ratio.R`  </li> 
+</ol><br />
 
 ### Analyses conducted on Functions
-<ins>9- perform functional inferences:</ins>
-  9a- prepare the file needed to convert the dataset to Biom format using ConvertToBiom.R 
-  9b- perform functional inferences (on Linux distribution) using the annotated code in FuncInferences_Picrust2.txt
+<ol start="10">
+<li>Perform functional inferences:  </li>
+<ul>
+  <li>Prepare the file needed to convert the dataset to Biom format using `Statistical_analyses/Functional_analysis/ConvertToBiom.R`<br />
+<u>NB:</u> Optional, the dataset converted to BIOM format is available in `Data/FunctionalInferences/BiomOutput` </li>
+  
+  <li>Perform functional inferences (on Linux distribution) using the annotated code in `Statistical_analyses/Functional_analysis/FuncInferences_Picrust2.txt`<br />
+<u>NB:</u> Optional, the results of the functional inferences are available in `Data/FunctionalInferences/Picrust2Output`</li>
+ </ul><br />
 
-10- compute and test (LMM) alpha diversity metrics using AlphaDivLMM_Function.R
-11- compute and test (LMM) beta diversity metrics using BetaDivLMM_Functions.R
+<li>Compute and test (LMM) alpha diversity metrics on inferred functions using `Statistical_analyses/Alpha_Diversity/AlphaDivLMM_Function.R` </li><br />
 
-12 TODO- compute and test (betadisper) variance homogeneity of beta diversity metrics on fish gut microbiota using BetaDisper_Func.R
-9f- Test treatments and covariates effects on Taxonomic differential abundance using Linda (LMM) using LINDA_FuncComp.R
+<li>Compute and test (LMM) beta diversity metrics on inferred functions using `Statistical_analyses/Beta_Diversity/BetaDivLMM_Functions.R` </li><br />
 
-10- Corr host traits................
+<li>Compute and test (betadisper) variance homogeneity of beta diversity metrics on inferred functions using `Statistical_analyses/Beta_Diversity/BetaDisper_Functions.R` </li><br />
 
+<li>Test treatments and covariates effects on functions differential abundance using Linda (LMM) using `Statistical_analyses/Functional_analysis/LINDA_FuncComp.R` </li><br />
+</ol>
 
-\* The raw dataset available in the figshare repository has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
+\* The raw dataset available in the figshare repository (10.6084/m9.figshare.28554470) has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database (https://www.arb-silva.de/) for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
+
+## List of R packages needed 
+
+```{r} 
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+if (!require("devtools", quietly = TRUE))
+    install.packages("devtools")
+if (!require("remotes", quietly = TRUE))
+    install.packages("remotes")
+if (!require("ape", quietly = TRUE))
+    install.packages("ape")
+if (!require("car", quietly = TRUE))
+    install.packages("car")
+if (!require("cowplot", quietly = TRUE))
+    install.packages("cowplot")
+if (!require("basicPlotteR", quietly = TRUE))
+    devtools::install_github("JosephCrispell/basicPlotteR")
+if (!require("biomformat", quietly = TRUE))
+    BiocManager::install("biomformat")
+if (!require("Biostrings", quietly = TRUE))
+    BiocManager::install("Biostrings")
+if (!require("DECIPHER", quietly = TRUE))
+    BiocManager::install("DECIPHER")
+if (!require("Deseq2", quietly = TRUE))
+    BiocManager::install("Deseq2")
+if (!require("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+if (!require("ggplot2", quietly = TRUE))
+    install.packages("ggplot2")
+if (!require("ggpubr", quietly = TRUE))
+    install.packages("ggpubr")
+if (!require("ggtree", quietly = TRUE))
+    BiocManager::install("ggtree")
+if (!require("graphics", quietly = TRUE))
+    install.packages("graphics")
+if (!require("grdevices", quietly = TRUE))
+    install.packages("grdevices")
+if (!require("kableExtra", quietly = TRUE))
+    install.packages("kableExtra")
+if (!require("lme4", quietly = TRUE))
+    install.packages("lme4")
+if (!require("lme4", quietly = TRUE))
+    install.packages("lme4")
+if (!require("metabaR", quietly = TRUE))
+    remotes::install_github("metabaRfactory/metabaR")
+if (!require("metagenomeSeq", quietly = TRUE))
+    BiocManager::install("metagenomeSeq")
+if (!require("MicrobiomeStat", quietly = TRUE))
+    devtools::install_github("cafferychen777/MicrobiomeStat")
+if (!require("MuMIn", quietly = TRUE))
+    install.packages("MuMIn")
+if (!require("performance", quietly = TRUE))
+    install.packages("performance")
+if (!require("phangorn", quietly = TRUE))
+    install.packages("phangorn")
+if (!require("phyloseq", quietly = TRUE))
+    BiocManager::install("phyloseq")
+if (!require("picante", quietly = TRUE))
+    install.packages("picante")
+if (!require("plyr", quietly = TRUE))
+    install.packages("plyr")
+if (!require("progress", quietly = TRUE))
+    install.packages("progress")
+if (!require("RcolorBrewer", quietly = TRUE))
+    install.packages("RcolorBrewer")
+if (!require("reshape2", quietly = TRUE))
+    install.packages("reshape2")
+if (!require("seqinr", quietly = TRUE))
+    install.packages("seqinr")
+if (!require("stats", quietly = TRUE))
+    install.packages("stats")
+if (!require("vegan", quietly = TRUE))
+    install.packages("vegan")
+```
+
+## Citation
+
+Please cite this repository as:
+> ....

@@ -1,10 +1,70 @@
-################################################################################
-# This is function aims to draw volcano plot                                   #
-# Title:                                                                       #
-# author:  "Quentin PETITJEAN[q.petitjean1@gmail.com]                          #
-# date: "21/06/2023"                                                           #
-################################################################################
-
+#' Volcano Plot for LINDA Analysis Results
+#'
+#' @description
+#' This function creates a volcano plot to visualize differential abundance 
+#' results (e.g., from LINDA analysis) by plotting log2 fold changes versus 
+#' -log10 adjusted p-values.
+#'
+#' @param x Numeric vector of log2 fold change values.
+#' @param y Numeric vector of -log10 adjusted p-values.
+#' @param xlim Numeric vector of length 2 specifying x-axis limits; if NULL, 
+#'   computed automatically.
+#' @param ylim Numeric vector of length 2 specifying y-axis limits; if NULL, 
+#'   computed automatically.
+#' @param group Vector indicating group membership for each point (for legend).
+#' @param col Color specification for points (can be a vector).
+#' @param main Character string for the main title of the plot.
+#' @param xlab Character string for the x-axis label.
+#' @param ylab Character string for the y-axis label.
+#' @param yalign Character string ("left" or "right") to set the alignment of 
+#'   the y-axis labels.
+#' @param cex.lab Numeric value specifying the text size for axis labels.
+#' @param cex.main Numeric value specifying the text size for the main title.
+#' @param cex.axis Numeric value specifying the text size for axis tick labels.
+#' @param cex.pts Numeric value specifying the size of the plotted points.
+#' @param pch Integer or character symbol to use for plotting points.
+#' @param srt Numeric value specifying the rotation angle for text labels.
+#' @param legend Logical indicating whether to draw a legend.
+#' @param cex.leg Numeric value specifying the text size in the legend.
+#' @param leg.order Optional vector specifying the order of legend items.
+#' @param hlines Numeric vector specifying horizontal line positions (y values).
+#' @param vlines Numeric vector specifying vertical line positions (x values).
+#' @param vlinesW Numeric value or vector for vertical line widths.
+#' @param vlinesCol Color or vector of colors for vertical lines.
+#' @param hlinesW Numeric value or vector for horizontal line widths.
+#' @param hlinesCol Color or vector of colors for horizontal lines.
+#' @param vlinesLty Numeric value or vector specifying the line type for vertical lines.
+#' @param hlinesLty Numeric value or vector specifying the line type for horizontal lines.
+#' @param labels Optional character vector of labels for all data points.
+#' @param selLabels Optional character vector of labels to be displayed.
+#' @param cex.labels Numeric value specifying the size of the text labels.
+#' @param pos.label Numeric vector of length 2 controlling the position adjustment 
+#'   of the text labels.
+#'
+#' @details
+#' If \code{xlim} or \code{ylim} are not provided, they are computed by adding 
+#' a 5% margin to the minimum and maximum values of \code{x} and \code{y}, respectively.
+#' The function also supports drawing custom reference lines (both vertical and 
+#' horizontal) with adjustable widths, colors, and line types. Optionally, selected 
+#' data points can be labeled using a helper function from the \code{basicPlotteR} 
+#' package.
+#' 
+#' **Dependencies:**
+#' This function depends on several packages. It internally calls functions from:
+#' \itemize{
+#'   \item \strong{basicPlotteR} (To add text label)
+#'   }
+#'   
+#' @importFrom basicPlotteR addTextLabels
+#'
+#' @return
+#' This function produces a volcano plot.
+#' 
+#' @author Quentin PETITJEAN [quentin.petitjean@inrae.fr]
+#'
+#' @date 15/06/2023
+#'
+#' @export
 
 volcanoPlot <- function(x = NULL,
                         y = NULL,

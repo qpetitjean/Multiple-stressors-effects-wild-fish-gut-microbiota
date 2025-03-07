@@ -1,34 +1,114 @@
 ##############################################################################################################
-#  Compute Beta diversity indices and test treatments effects using LMM and dredge method                   #
-#############################################################################################################
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/multiNorm.R") # import a function used to compute multiple normalization methods
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/DredgedLMM.R")  # import a function used to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/alphaDiv.R") # import a function compute alpha diversity indices from a matrix containing read counts per sample
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GitRepository/R_Func/multiDist.R") # import a function used to compute multiple distances
-source("D:/POSTDOC_INP_GOLFECH_2023/R scripts/GutMicrobiome/BxpltFunc.R") # import a function compute draw customized boxplots
+# Script Title: Compute Beta Diversity Indices and Test Treatment Effects Using LMM and Dredge Method
+#
+# Author: Quentin PETITJEAN
+# Date Created: 02/02/2024
+# Last Modified: 02/02/2024
+# ==============================================================================
+# Requirements:
+# - R version 4.2.3 (or compatible)
+# - Packages:
+#   - metabaR v1.0.0: For processing and subsetting metabarcoding datasets.
+#   - ape v5.7-1: For phylogenetic tree manipulation.
+#   - vegan v2.6-4: For performing ordination analyses (PCoA, NMDS) and environmental fitting.
+#   - progress v1.2.2: For displaying progress bars during iterative processing.
+#   - car v3.1-2: For computing type-III ANOVA on linear models.
+#   - kableExtra v1.3.4: For creating enhanced HTML summary tables.
+#   - ggplot2 v3.5.1 and ggpubr v0.6.0: For generating plots.
+# ==============================================================================
+# Custom Functions:
+#     • multiNorm.R: Computes multiple normalization methods on count data.
+#     • DredgedLMM.R: Performs model dredging for linear mixed models and extracts 
+#       model summaries, ANOVA tables, and R² values.
+#     • multiDist.R: Computes multiple beta diversity distance metrics (Bray, Jaccard, 
+#       Robust-Aitchison, Hellinger) using the phylogenetic tree.
+#     • BxpltFunc.R: Creates customized boxplots for visualizing statistical results.
+# ==============================================================================
+# Overview:
+# This script computes beta diversity distances from a PICRUSt2 functional inference dataset 
+# (EC pathways) derived from a cleaned metabaR object (fish gut samples) and tests the effects 
+# of experimental treatments (Contamination, Injection, Population, Sex, Size) using linear mixed 
+# models (LMM) coupled with a dredge method for model selection. The workflow includes:
+#   1. Importing design data, a phylogenetic tree, and a metabaR object.
+#   2. Importing PICRUSt2 enzyme classification pathway prediction results and adjusting pathway IDs.
+#   3. Merging functional inference data with sample metadata.
+#   4. Applying multiple normalization methods to the functional count data.
+#   5. Computing beta diversity distances and deriving ordination coordinates (PCOA and NMDS).
+#   6. Running envfit analysis to assess correlations between ordination scores and treatments.
+#   7. Conducting LMM analyses on ordination axes to test treatment effects, extracting model
+#      performance metrics (e.g., sample size and R² values).
+#   8. Saving diagnostic plots and generating HTML summary tables for each normalization method 
+#      and distance metric.
+# ==============================================================================
+# Usage:
+#   1. Update the 'savingDir' variable to point to your input/output directory.
+#   2. Ensure that all required packages and custom function source files are installed and accessible.
+#   3. Run the script in an R environment to perform normalization, compute beta diversity indices,
+#      run LMM analyses, and generate summary outputs and diagnostic plots.
+#   4. The script outputs include:
+#      - RDS objects containing distance matrices and ordination coordinates.
+#      - HTML tables summarizing LMM and envfit results for each normalization method.
+#      - Diagnostic plot files (TIF and SVG formats) for model performance and ordination visualization.
+# ==============================================================================
+
+##############################################
+#       	Install needed packages            #
+##############################################
+if(!require(metabaR)){
+  install.packages("metabaR")
+}
+if(!require(ape)){
+  install.packages("ape")
+}
+if(!require(car)){
+  install.packages("car")
+}
+if(!require(kableExtra)){
+  install.packages("kableExtra")
+}
+if(!require(vegan)){
+  install.packages("vegan")
+}
+if(!require(ggplot2)){
+  install.packages("ggplot2")
+}
+if(!require(ggpubr)){
+  install.packages("ggpubr")
+}
+if(!require(progress)){
+  install.packages("progress")
+}
 
 #######################
 # specify some path   #
 #######################
 # the path to the directory from where file should be both imported 
-savingDir <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs"
+savingDir <- "W:/POSTDOC_INP_GOLFECH_2023/Outputs"
 
 # directory where the output files should be saved
-DirSave <- "D:/POSTDOC_INP_GOLFECH_2023/Outputs/Normalized_Data"
+DirSave <- file.path(savingDir, "Normalized_Data")
+
+##############################################
+#   Import some custom functions             #
+##############################################
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/multiNorm.R") # import a function used to compute multiple normalization methods
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/DredgedLMM.R")  # import a function used to retrieve the summary, anova table and Rsquared of the most straightforward mixed effect model using rank selection (e.g., AICc)
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/multiDist.R") # import a function used to compute multiple distances
+source("https://raw.githubusercontent.com/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota/main/R_Func/BxpltFunc.R") # import a function compute draw customized boxplots
 
 #######################
 # Import the data     #
 #######################
 # import the full dataset from the experiment (treatment & behavioral & physiological measures)
 FullDat <-
-  read.csv2(file.path(savingDir, "Varia_contam_fullv5.csv"), dec = ".", sep = ";")
+  read.csv2(file.path(savingDir, "Data/DesignData", "DesignData.csv"), dec = ".", sep = ";")
 
 # import the phylogenetic tree (.nwk)
 PhyloTree <-
-  ape::read.tree(file.path(savingDir, "PhyloTree.nwk"))
+  ape::read.tree(file.path(savingDir, "Data/PhyloTree/PhyloTree.nwk"))
 
 # import the cleaned dataset (metabaR object) and select only gut samples
-labFish <- readRDS(file.path(savingDir, "Preprocessing-Metabar/fguts_Bact_agg_MergedRep.RDS"))
+labFish <- readRDS(file.path(savingDir, "Data/CleanedData", "fguts_Bact_agg_MergedRep.RDS"))
 labFish <- metabaR::subset_metabarlist(labFish,
                                        table = "pcrs",
                                        indices = labFish$pcrs$matrix == "fish_gut")
@@ -49,7 +129,7 @@ rownames(labFish[["reads"]]) <- labFish[["samples"]][["Ind"]][match(rownames(lab
 # import Picrust2 results
 ###############################################################
 ## import EC data including description column (tibble)
-ECPath <-  as.data.frame(readr::read_tsv(file.path(savingDir, "Picrust2Output/EC_pathways_out/pred_metagenome_unstrat_descrip.tsv.gz")))
+ECPath <-  as.data.frame(readr::read_tsv(file.path(savingDir, "FunctionalInferences/Picrust2Output/EC_pathways_out/pred_metagenome_unstrat_descrip.tsv.gz")))
 
 # manual change of the PWY-5182 and ARGORNPROST-PWY pathways which are not found in the Metacyc db 
 # but found trough manual search using description given by picrust2 
@@ -257,9 +337,10 @@ for (i in names(normalizedDat)) {
                        sum(BetaDivCoords[[l]][[k]][[i]][["values"]][["Eigenvalues"]])) * 100
       }
       
+      # for the Populations
       ordLab <- c("ELEV", "ARIMAS", "CELCAB", "AUSCOR", "RIOU")
       ordCol <- as.character(TempDist$Pop_col[match(ordLab, TempDist$Pop)])
-      PlotListPop[[l]][[k]][[i]] <-
+      pcoa_plot <-
         ggplot2::ggplot(TempDist,
                         ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], 
                                      y = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], 
@@ -289,15 +370,77 @@ for (i in names(normalizedDat)) {
                                      name = "Population")+
         ggplot2::theme_classic()
       
+      plot_build <- ggplot2::ggplot_build(pcoa_plot)
+      
+      # Density plot for Axis 1
+      density_x <-
+        ggplot2::ggplot(TempDist, ggplot2::aes(x =  .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], fill = .data[["Pop_col"]])) +
+        ggplot2::geom_density(alpha = 0.5) +
+        ggplot2::scale_colour_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Population"
+        ) +
+        ggplot2::scale_fill_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Population"
+        ) +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.title.x = ggplot2::element_blank(),
+          axis.text.x = ggplot2::element_blank(),
+          axis.ticks.x = ggplot2::element_blank(),
+          legend.position = "none"
+        )+ 
+        ggplot2::xlim(plot_build$layout$panel_params[[1]]$x.range)
+      
+      # Density plot for Axis 2
+      density_y <-
+        ggplot2::ggplot(TempDist, ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], fill = .data[["Pop_col"]])) +
+        ggplot2::geom_density(alpha = 0.5) +
+        ggplot2::scale_colour_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Population"
+        ) +
+        ggplot2::scale_fill_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Population"
+        ) +
+        ggplot2::coord_flip() +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.title.y = ggplot2::element_blank(),
+          axis.text.y = ggplot2::element_blank(),
+          axis.ticks.y = ggplot2::element_blank(),
+          legend.position = "none"
+        )+ 
+        ggplot2::xlim(plot_build$layout$panel_params[[1]]$y.range)
+      
+      PlotListPop[[l]][[k]][[i]] <- ggpubr::ggarrange(
+        density_x, NULL,        
+        pcoa_plot, density_y,   
+        nrow = 2, ncol = 2,     
+        widths = c(4, 1),       
+        heights = c(1, 4),     
+        common.legend = TRUE, legend = "top"
+      )
+      
+      # for the contamination
       ordLab <- c("NC", "C")
       ordCol <- as.character(TempDist$Contam_col[match(ordLab, TempDist$Contam)])
-      PlotListContam[[l]][[k]][[i]] <-
-        ggplot2::ggplot(TempDist,
-                        ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], 
-                                     y = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], 
-                                     colour = .data[["Contam_col"]], 
-                                     fill = .data[["Contam_col"]])
-        ) +
+      pcoa_plot <- ggplot2::ggplot(TempDist,
+                                   ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], 
+                                                y = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], 
+                                                colour = .data[["Contam_col"]], 
+                                                fill = .data[["Contam_col"]])
+      ) +
         ggplot2::geom_point(size = 4) +
         ggplot2::ggtitle(ifelse(l == "PCOA", i, paste0(
           i,
@@ -321,15 +464,77 @@ for (i in names(normalizedDat)) {
                                      name = "Contamination")+
         ggplot2::theme_classic()
       
+      plot_build <- ggplot2::ggplot_build(pcoa_plot)
+      
+      # Density plot for Axis 1
+      density_x <-
+        ggplot2::ggplot(TempDist, ggplot2::aes(x =  .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], fill = .data[["Contam_col"]])) +
+        ggplot2::geom_density(alpha = 0.5) +
+        ggplot2::scale_colour_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Contamination"
+        ) +
+        ggplot2::scale_fill_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Contamination"
+        ) +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.title.x = ggplot2::element_blank(),
+          axis.text.x = ggplot2::element_blank(),
+          axis.ticks.x = ggplot2::element_blank(),
+          legend.position = "none"
+        )+ 
+        ggplot2::xlim(plot_build$layout$panel_params[[1]]$x.range)
+      
+      # Density plot for Axis 2
+      density_y <-
+        ggplot2::ggplot(TempDist, ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], fill = .data[["Contam_col"]])) +
+        ggplot2::geom_density(alpha = 0.5) +
+        ggplot2::scale_colour_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Contamination"
+        ) +
+        ggplot2::scale_fill_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Contamination"
+        ) +
+        ggplot2::coord_flip() +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.title.y = ggplot2::element_blank(),
+          axis.text.y = ggplot2::element_blank(),
+          axis.ticks.y = ggplot2::element_blank(),
+          legend.position = "none"
+        )+ 
+        ggplot2::xlim(plot_build$layout$panel_params[[1]]$y.range)
+      
+      PlotListContam[[l]][[k]][[i]] <- ggpubr::ggarrange(
+        density_x, NULL,        
+        pcoa_plot, density_y,   
+        nrow = 2, ncol = 2,     
+        widths = c(4, 1),       
+        heights = c(1, 4),     
+        common.legend = TRUE, legend = "top"
+      )
+      
+      # for the immune challenge
       ordLab <- c("PBS", "AMIX")
       ordCol <- as.character(TempDist$Inj_col[match(ordLab, TempDist$Inj)])
-      PlotListInj[[l]][[k]][[i]] <-
-        ggplot2::ggplot(TempDist,
-                        ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], 
-                                     y = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], 
-                                     colour = .data[["Inj_col"]], 
-                                     fill = .data[["Inj_col"]])
-        ) +
+      pcoa_plot <- ggplot2::ggplot(TempDist,
+                                   ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], 
+                                                y = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], 
+                                                colour = .data[["Inj_col"]], 
+                                                fill = .data[["Inj_col"]])
+      ) +
         ggplot2::geom_point(size = 4) +
         ggplot2::ggtitle(ifelse(l == "PCOA", i, paste0(
           i,
@@ -352,6 +557,68 @@ for (i in names(normalizedDat)) {
                                      labels = ordLab, 
                                      name = "Imm. Chall.")+
         ggplot2::theme_classic()
+      
+      plot_build <- ggplot2::ggplot_build(pcoa_plot)
+      
+      # Density plot for Axis 1
+      density_x <-
+        ggplot2::ggplot(TempDist, ggplot2::aes(x =  .data[[ifelse(l == "PCOA", "Axis.1", "MDS1")]], fill = .data[["Inj_col"]])) +
+        ggplot2::geom_density(alpha = 0.5) +
+        ggplot2::scale_colour_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Imm. Chall."
+        ) +
+        ggplot2::scale_fill_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Imm. Chall."
+        ) +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.title.x = ggplot2::element_blank(),
+          axis.text.x = ggplot2::element_blank(),
+          axis.ticks.x = ggplot2::element_blank(),
+          legend.position = "none"
+        )+ 
+        ggplot2::xlim(plot_build$layout$panel_params[[1]]$x.range)
+      
+      # Density plot for Axis 2
+      density_y <-
+        ggplot2::ggplot(TempDist, ggplot2::aes(x = .data[[ifelse(l == "PCOA", "Axis.2", "MDS2")]], fill = .data[["Inj_col"]])) +
+        ggplot2::geom_density(alpha = 0.5) +
+        ggplot2::scale_colour_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Imm. Chall."
+        ) +
+        ggplot2::scale_fill_identity(
+          guide = "legend",
+          breaks = ordCol,
+          labels = ordLab,
+          name = "Imm. Chall."
+        ) +
+        ggplot2::coord_flip() +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.title.y = ggplot2::element_blank(),
+          axis.text.y = ggplot2::element_blank(),
+          axis.ticks.y = ggplot2::element_blank(),
+          legend.position = "none"
+        )+ 
+        ggplot2::xlim(plot_build$layout$panel_params[[1]]$y.range)
+      
+      PlotListInj[[l]][[k]][[i]] <- ggpubr::ggarrange(
+        density_x, NULL,        
+        pcoa_plot, density_y,   
+        nrow = 2, ncol = 2,     
+        widths = c(4, 1),       
+        heights = c(1, 4),     
+        common.legend = TRUE, legend = "top"
+      )
     }
   }
   pb$tick(1)
@@ -668,8 +935,8 @@ ggplot2::ggsave(
   file = toSave,
   plot = PlotListContam[[ordination]][["Robust.Aitchison"]][[dataNorm]],
   dpi=200,
-  width = 5,
-  height = 3
+  width = 6,
+  height = 4
 )
 
 

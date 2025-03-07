@@ -1,9 +1,64 @@
-#########################################################################################################################################
-# This is function aims to compute multiple normalisation of reads count                                                                #
-# title: "Multiple normalisation of 16s reads count data"
-# author:  "Quentin PETITJEAN[q.petitjean1@gmail.com]                                                                                   # 
-# date: "15/06/2023"                                                                                                                    #
-#########################################################################################################################################
+#' Multiple Normalization of 16S Reads Count Data
+#'
+#' @description
+#' This function computes multiple normalization methods for 16S read count data.
+#' It supports a variety of methods, including:
+#' \itemize{
+#'   \item Original counts and their log2-transformation.
+#'   \item Proportion normalization (scaled to a library size of 10,000) and its log2-transformation.
+#'   \item Cumulative Sum Scaling (CSS) normalization (using the \code{metagenomeSeq} package) and its log2-transformation.
+#'   \item Rarefaction normalization (via \code{phyloseq}) and its log2-transformation.
+#'   \item DESeq2-based normalization and its log2-transformation.
+#'   \item Trimmed Mean of M-values (TMM) normalization (using \code{edgeR}) and its log2-transformation.
+#' }
+#'
+#' @param dataList A matrix of read counts (with sample names as columns) or a list containing
+#'   at least the element \code{"reads"} (a matrix of counts) and optionally \code{"samples"}.
+#' @param norm A character vector specifying the normalization methods to compute.
+#'   Supported values include: \code{"original"}, \code{"original.log"}, \code{"read.prop"},
+#'   \code{"read.prop.log"}, \code{"read.CSS"}, \code{"read.CSS.log"}, \code{"read.rare"},
+#'   \code{"read.rare.log"}, \code{"read.deseq"}, \code{"read.deseq.log"}, \code{"read.tmm"},
+#'   and \code{"read.tmm.log"}. If a log-transformed version is requested, the non-log version
+#'   is computed first.
+#' @param TaxRow Logical; if \code{FALSE} (default), the read count matrix is transposed so that
+#'   rows represent taxa.
+#'
+#'#' @details
+#' The input \code{dataList} can be either:
+#' \itemize{
+#'   \item A matrix of read counts with sample names as column names.
+#'   \item A list of length \eqn{\geq 1} containing at least an element named \code{"reads"} (a matrix of counts)
+#'         and optionally a \code{"samples"} data frame.
+#' }
+#' If \code{TaxRow = FALSE} (the default), the \code{"reads"} matrix is transposed so that rows correspond to taxa (OTUs).
+#'
+#' **Dependencies:**
+#' This function depends on several packages. It internally calls functions from:
+#' \itemize{
+#'   \item \strong{metagenomeSeq} (for CSS normalization),
+#'   \item \strong{phyloseq} (for rarefaction and conversion for DESeq2),
+#'   \item \strong{DESeq2} (for variance stabilizing transformation),
+#'   \item \strong{edgeR} (for TMM normalization)
+#' }
+#'
+#' For reproducibility, please ensure that the required packages are installed and loaded.
+#' Although not ideal to load packages within a function, the following libraries are explicitly 
+#' loaded here to ensure that all dependent functions are available:
+#'
+#' @importFrom metagenomeSeq newMRexperiment cumNormStatFast cumNormMat
+#' @importFrom phyloseq otu_table sample_data phyloseq rarefy_even_depth phyloseq_to_deseq2
+#' @importFrom DESeq2 estimateSizeFactors varianceStabilizingTransformation
+#' @importFrom edgeR calcNormFactors
+#' @importFrom BiocGenerics counts
+#' @importFrom SummarizedExperiment assay
+#'
+#' @return A named list where each element corresponds to one of the specified normalization
+#'   methods. Each element is a matrix of normalized read counts.
+#'
+#' @author Quentin PETITJEAN [quentin.petitjean@inrae.fr]
+#'
+#' @date 15/06/2023
+#' @export
 
 multiNorm <- function(dataList = NULL, # a matrix containing reads count, with sample name as column or a list of length 2, containing the read count and samples information
                       norm = c("original", "original.log",
