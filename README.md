@@ -5,12 +5,16 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota)
 ![GitHub repo size](https://img.shields.io/github/repo-size/qpetitjean/Multiple-stressors-effects-wild-fish-gut-microbiota)
 
+Dataset: <a href="https://doi.org/10.5281/zenodo.14989875"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.14989875.svg" alt="DOI"></a>
+
+Permanent copy of this code repository: 
+
 This repository contains:
 <ul>
 <li>Some R useful R function to allow some computations, model selection and reproduce the visualization of the results within the <code>R_Func</code> directory</li>
 <li>The R script used to preprocess, clean, and analyse the data within the <code>Statistical_analyses</code> directory</li>
 </ul><br />
-Files within this code repository, Datas from figshare repository (...) and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
+Files within this code repository, Datas from Zenodo repository (https://doi.org/10.5281/zenodo.14989874) and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
 
 >PETITJEAN, Q., GRANADA, M., JEAN, S., MANZI S., VEYSSIERE C., PERRAULT, A., COUSSEAU, M., LAFFAILLE P., WHITE J., JACQUIN, L., (Submitted). Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish.<br /><br />
 Preprint is available
@@ -23,7 +27,7 @@ here:<br /><......>
 
 ### Data preparation
 <ol start="1">
-<li>Download the raw and cleaned dataset &ast; from the figshare repository (<code>Data</code> directory) available here: 10.6084/m9.figshare.28554470 </li><br />
+<li>Download the raw and cleaned dataset &ast; from the Zenodo repository (<code>Data</code> directory) available here: https://doi.org/10.5281/zenodo.14989874 </li><br />
 
 <li>Clean the dataset using <code>Statistical_analyses/Data_pre-processing_MetabaR/Stats_MetabaRLab_MergedRep.R</code> <br />
 <u>NB:</u> Optional, the cleaned dataset is available in <code>Data/CleanedData</code> as <code>fguts_Bact_agg_MergedRep.RDS</code>) </li><br />
@@ -170,5 +174,6 @@ if (!require("vegan", quietly = TRUE))
 
 ## Citation
 
-Please cite this repository as:
-> ....
+Data: PETITJEAN, Q. (2025). Dataset from: Petitjean et al. (Submitted) Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. [Data set]. Zenodo. https://doi.org/10.5281/zenodo.14989875
+
+Code: 
