@@ -23,7 +23,7 @@ here:<br /><......>
 
 ### Data preparation
 <ol start="1">
-<li>Download the raw and cleaned dataset\* from the figshare repository (<code>Data</code> directory) available here: 10.6084/m9.figshare.28554470 </li><br />
+<li>Download the raw and cleaned dataset &ast; from the figshare repository (<code>Data</code> directory) available here: 10.6084/m9.figshare.28554470 </li><br />
 
 <li>Clean the dataset using <code>Statistical_analyses/Data_pre-processing_MetabaR/Stats_MetabaRLab_MergedRep.R</code> <br />
 <u>NB:</u> Optional, the cleaned dataset is available in <code>Data/CleanedData</code> as <code>fguts_Bact_agg_MergedRep.RDS</code>) </li><br />
@@ -91,7 +91,7 @@ here:<br /><......>
 <li>Test treatments and covariates effects on functions differential abundance using Linda (LMM) using <code>Statistical_analyses/Functional_analysis/LINDA_FuncComp.R</code> </li><br />
 </ol>
 
-\* The raw dataset available in the figshare repository (10.6084/m9.figshare.28554470) has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database (https://www.arb-silva.de/) for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
+&ast; The raw dataset available in the figshare repository (10.6084/m9.figshare.28554470) has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database (https://www.arb-silva.de/) for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
 
 ## List of R packages needed 
 
