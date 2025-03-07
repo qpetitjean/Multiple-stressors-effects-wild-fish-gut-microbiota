@@ -7,10 +7,10 @@
 
 This repository contains:
 <ul>
-<li>Some R useful R function to allow some computations, model selection and reproduce the visualization of the results within the `R_Func` directory</li>
-<li>The R script used to preprocess, clean, and analyse the data within the `Statistical_analyses` directory</li>
+<li>Some R useful R function to allow some computations, model selection and reproduce the visualization of the results within the ```R_Func``` directory</li>
+<li>The R script used to preprocess, clean, and analyse the data within the ```Statistical_analyses``` directory</li>
 </ul><br />
-Files and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, _Gobio Occitaniae_). These results are discussed in the following manuscript: <br />
+Files within this code repository, Datas from figshare repository (...) and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
 
 >PETITJEAN, Q., GRANADA, M., JEAN, S., MANZI S., VEYSSIERE C., PERRAULT, A., COUSSEAU, M., LAFFAILLE P., WHITE J., JACQUIN, L., (Submitted). Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish.<br /><br />
 Preprint is available
@@ -23,72 +23,72 @@ here:<br /><......>
 
 ### Data preparation
 <ol start="1">
-<li>Download the raw and cleaned dataset\* from the figshare repository (`Data` directory) available here: 10.6084/m9.figshare.28554470 </li><br />
+<li>Download the raw and cleaned dataset\* from the figshare repository (```Data``` directory) available here: 10.6084/m9.figshare.28554470 </li><br />
 
-<li>Clean the dataset using `Statistical_analyses/Data_pre-processing_MetabaR/Stats_MetabaRLab_MergedRep.R` <br />
-<u>NB:</u> Optional, the cleaned dataset is available in `Data/CleanedData` as `fguts_Bact_agg_MergedRep.RDS`) </li><br />
+<li>Clean the dataset using ```Statistical_analyses/Data_pre-processing_MetabaR/Stats_MetabaRLab_MergedRep.R``` <br />
+<u>NB:</u> Optional, the cleaned dataset is available in ```Data/CleanedData``` as ```fguts_Bact_agg_MergedRep.RDS```) </li><br />
 
-<li>Construct the phylogenetic tree using `Statistical_analyses/Phylogenetic_Tree/PhyloTree.R` <br />
-<u>NB:</u> Optional, the phylogenetic tree is available in `Data/PhyloTree`</li><br />
+<li>Construct the phylogenetic tree using ```Statistical_analyses/Phylogenetic_Tree/PhyloTree.R``` <br />
+<u>NB:</u> Optional, the phylogenetic tree is available in ```Data/PhyloTree```</li><br />
 </ol>
 
 ### Analyses conducted on MOTUs
 <ol start="4">
 <li>Compute and test (LMM) alpha diversity metrics on:
 <ul>
- <li>Fish gut microbiota using `Statistical_analyses/Alpha_Diversity/AlphaDivLMM_MOTUs.R`</li>
- <li>Water microbiota using `Statistical_analyses/Alpha_Diversity/AlphaDivLMM_Water.R` </li>
+ <li>Fish gut microbiota using ```Statistical_analyses/Alpha_Diversity/AlphaDivLMM_MOTUs.R```</li>
+ <li>Water microbiota using ```Statistical_analyses/Alpha_Diversity/AlphaDivLMM_Water.R``` </li>
   </li>
  </ul><br />
  
 <li>Compute and test (LMM & envfit) beta diversity metrics on:
 <ul>
- <li>Fish gut microbiota using `Statistical_analyses/Beta_Diversity/BetaDivLMM_MOTUs.R`</li>
- <li>Water microbiota using `Statistical_analyses/Beta_Diversity/BetaDivLM_Water.R`</li>
+ <li>Fish gut microbiota using ```Statistical_analyses/Beta_Diversity/BetaDivLMM_MOTUs.R```</li>
+ <li>Water microbiota using ```Statistical_analyses/Beta_Diversity/BetaDivLM_Water.R```</li>
   </li>
  </ul><br />
 
-<li>Compute and test (betadisper) variance homogeneity of beta diversity metrics on fish gut microbiota using `Statistical_analyses/Beta_Diversity/BetaDisper_Tax.R` </li><br />
+<li>Compute and test (betadisper) variance homogeneity of beta diversity metrics on fish gut microbiota using ```Statistical_analyses/Beta_Diversity/BetaDisper_Tax.R``` </li><br />
 
-<li>Check whether results are consistent across normalization, ordination methods, and indices using `Statistical_analyses/Check_Normalization/ExtractNormRes.R` <br />
+<li>Check whether results are consistent across normalization, ordination methods, and indices using ```Statistical_analyses/Check_Normalization/ExtractNormRes.R``` <br />
 <u>NB:</u> Optional, this step is not mandatory to perform the next steps</li><br />
 
 <li>Test treatments and covariates effects on Taxonomic differential abundance using Linda (LMM) on:
 <ul>
  <li>Fish gut microbiota at:</li> 
  <ul>
-  <li>The family level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Family.R`</li> 
-  <li>The phylum level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Phylum.R`</li>
+  <li>The family level using ```Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Family.R```</li> 
+  <li>The phylum level using ```Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Phylum.R```</li>
  </ul>
  <li>Water microbiota at:</li> 
  <ul>
-  <li>The family level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Family_water.R`</li> 
-  <li>The phylum level using `Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Phylum_water.R`</li>
+  <li>The family level using ```Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Family_water.R```</li> 
+  <li>The phylum level using ```Statistical_analyses/Taxonomic_analysis/LINDA_TaxComp_Phylum_water.R```</li>
  </ul>
   </li>
  </ul><br />
 
-<li>Compute and test common taxonomic levels ratios indicating dysbiosis such as Bacteroidota/Proteobacteria and Firmicutes/Bacteroidota ratio using `Statistical_analyses/Taxonomic_analysis/Dysbiosis_Ratio.R`  </li> 
+<li>Compute and test common taxonomic levels ratios indicating dysbiosis such as Bacteroidota/Proteobacteria and Firmicutes/Bacteroidota ratio using ```Statistical_analyses/Taxonomic_analysis/Dysbiosis_Ratio.R```  </li> 
 </ol><br />
 
 ### Analyses conducted on Functions
 <ol start="10">
 <li>Perform functional inferences:  </li>
 <ul>
-  <li>Prepare the file needed to convert the dataset to Biom format using `Statistical_analyses/Functional_analysis/ConvertToBiom.R`<br />
-<u>NB:</u> Optional, the dataset converted to BIOM format is available in `Data/FunctionalInferences/BiomOutput` </li>
+  <li>Prepare the file needed to convert the dataset to Biom format using ```Statistical_analyses/Functional_analysis/ConvertToBiom.R```<br />
+<u>NB:</u> Optional, the dataset converted to BIOM format is available in ```Data/FunctionalInferences/BiomOutput``` </li>
   
-  <li>Perform functional inferences (on Linux distribution) using the annotated code in `Statistical_analyses/Functional_analysis/FuncInferences_Picrust2.txt`<br />
-<u>NB:</u> Optional, the results of the functional inferences are available in `Data/FunctionalInferences/Picrust2Output`</li>
+  <li>Perform functional inferences (on Linux distribution) using the annotated code in ```Statistical_analyses/Functional_analysis/FuncInferences_Picrust2.txt```<br />
+<u>NB:</u> Optional, the results of the functional inferences are available in ```Data/FunctionalInferences/Picrust2Output```</li>
  </ul><br />
 
-<li>Compute and test (LMM) alpha diversity metrics on inferred functions using `Statistical_analyses/Alpha_Diversity/AlphaDivLMM_Function.R` </li><br />
+<li>Compute and test (LMM) alpha diversity metrics on inferred functions using ```Statistical_analyses/Alpha_Diversity/AlphaDivLMM_Function.R``` </li><br />
 
-<li>Compute and test (LMM) beta diversity metrics on inferred functions using `Statistical_analyses/Beta_Diversity/BetaDivLMM_Functions.R` </li><br />
+<li>Compute and test (LMM) beta diversity metrics on inferred functions using ```Statistical_analyses/Beta_Diversity/BetaDivLMM_Functions.R``` </li><br />
 
-<li>Compute and test (betadisper) variance homogeneity of beta diversity metrics on inferred functions using `Statistical_analyses/Beta_Diversity/BetaDisper_Functions.R` </li><br />
+<li>Compute and test (betadisper) variance homogeneity of beta diversity metrics on inferred functions using ```Statistical_analyses/Beta_Diversity/BetaDisper_Functions.R``` </li><br />
 
-<li>Test treatments and covariates effects on functions differential abundance using Linda (LMM) using `Statistical_analyses/Functional_analysis/LINDA_FuncComp.R` </li><br />
+<li>Test treatments and covariates effects on functions differential abundance using Linda (LMM) using ```Statistical_analyses/Functional_analysis/LINDA_FuncComp.R``` </li><br />
 </ol>
 
 \* The raw dataset available in the figshare repository (10.6084/m9.figshare.28554470) has already been processed trough a bioinformatic pipeline including pair-end assembly, demultiplexing, filtration of short, poorly aligned, duplicated and chimeric sequences as well as sequences containing non attributed nucleotides. Also, as sequencing has been conducted on triplicate samples, triplicates were merged based on a 97% similarity treshold and taxonomic annotation was performed using the SILVAngs database (https://www.arb-silva.de/) for small sequences (16S and 18S; v138.1 released on August 27th, 2020).
