@@ -14,7 +14,8 @@ This repository contains:
 <li>Some R useful R function to allow some computations, model selection and reproduce the visualization of the results within the <code>R_Func</code> directory</li>
 <li>The R script used to preprocess, clean, and analyse the data within the <code>Statistical_analyses</code> directory</li>
 </ul><br />
-Files within this code repository, Datas from [Zenodo repository](https://doi.org/10.5281/zenodo.14989875) and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
+
+Files within this code repository, Datas from <a href="https://doi.org/10.5281/zenodo.14989875">Zenodo repository</a> and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
 
 >Petitjean, Q., Jean, S., Granada, M., Manzi, S., Veyssiere, C., Perrault, A., Cousseau, M., Laffaille, P., Jacquin, L., White, J., 2025. Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. https://doi.org/10.1101/2025.03.21.644596 <br /><br />
 Preprint is available here: <br /> 
@@ -175,8 +176,8 @@ if (!require("vegan", quietly = TRUE))
 
 ## Citation
 
-Article:<br />Petitjean, Q., Jean, S., Granada, M., Manzi, S., Veyssiere, C., Perrault, A., Cousseau, M., Laffaille, P., Jacquin, L., White, J., 2025. Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. https://doi.org/10.1101/2025.03.21.644596 <br />
+<u>Article:</u><br />Petitjean, Q., Jean, S., Granada, M., Manzi, S., Veyssiere, C., Perrault, A., Cousseau, M., Laffaille, P., Jacquin, L., White, J., 2025. Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. https://doi.org/10.1101/2025.03.21.644596 <br />
 
-Datasets:<br />PETITJEAN, Q. (2025). Dataset from: Petitjean et al. (Submitted) Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. [Data set]. Zenodo. https://doi.org/10.5281/zenodo.14989875 <br />
+<u>Datasets:</u><br />PETITJEAN, Q. (2025). Dataset from: Petitjean et al. Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. [Data set]. Zenodo. https://doi.org/10.5281/zenodo.14989875 <br />
 
-Code:<br />Quentin PETITJEAN. (2025). Code from: Petitjean et al. (Submitted) Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish (V1.0). Zenodo. https://doi.org/10.5281/zenodo.14990007 <br />
+<u>Code:</u><br />PETITJEAN Q. (2025). Code from: Petitjean et al. Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish (V1.0). Zenodo. https://doi.org/10.5281/zenodo.14990007 <br />
