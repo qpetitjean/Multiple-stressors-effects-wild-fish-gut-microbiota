@@ -14,7 +14,7 @@ This repository contains:
 <li>Some R useful R function to allow some computations, model selection and reproduce the visualization of the results within the <code>R_Func</code> directory</li>
 <li>The R script used to preprocess, clean, and analyse the data within the <code>Statistical_analyses</code> directory</li>
 </ul><br />
-Files within this code repository, Datas from [Zenodo repository](https://doi.org/10.5281/zenodo.14989874) and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
+Files within this code repository, Datas from [Zenodo repository](https://doi.org/10.5281/zenodo.14989875) and the step by step procedure detailed below allow to fully reproduce the results of the paper by testing the effects of multiples stressors (i.e., metal contamination and immune challenge) on the gut microbiota of wild fish populations (n=5, <i>Gobio Occitaniae</i>). These results are discussed in the following manuscript: <br /><br />
 
 >Petitjean, Q., Jean, S., Granada, M., Manzi, S., Veyssiere, C., Perrault, A., Cousseau, M., Laffaille, P., Jacquin, L., White, J., 2025. Experimental metal contamination reduces gut microbiota diversity and alters its composition and function in wild-caught fish. https://doi.org/10.1101/2025.03.21.644596 <br /><br />
 Preprint is available here: <br /> 
@@ -27,8 +27,8 @@ https://www.biorxiv.org/content/10.1101/2025.03.21.644596v1
 
 ### Data preparation
 <ol start="1">
-<li>Download the raw and cleaned dataset &ast; from the Zenodo repository (<code>Data</code> directory) </li><br />
-https://doi.org/10.5281/zenodo.14989874
+<li>Download the raw and cleaned dataset &ast; from the Zenodo repository (<code>Data</code> directory) </li>
+https://doi.org/10.5281/zenodo.14989874 <br />
 
 <li>Clean the dataset using <code>Statistical_analyses/Data_pre-processing_MetabaR/Stats_MetabaRLab_MergedRep.R</code> <br />
 <u>NB:</u> Optional, the cleaned dataset is available in <code>Data/CleanedData</code> as <code>fguts_Bact_agg_MergedRep.RDS</code>) </li><br />
