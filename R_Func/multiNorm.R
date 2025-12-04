@@ -22,6 +22,7 @@
 #'   is computed first.
 #' @param TaxRow Logical; if \code{FALSE} (default), the read count matrix is transposed so that
 #'   rows represent taxa.
+#' @param rarefy.depth Numeric; if \code{FALSE} (default), if rarefying method (\code{"read.rare"}, \code{"read.rare.log"}) is used, set the rarefaction threshold.  
 #'
 #'#' @details
 #' The input \code{dataList} can be either:
@@ -67,7 +68,8 @@ multiNorm <- function(dataList = NULL, # a matrix containing reads count, with s
                                "read.rare", "read.rare.log",
                                "read.deseq", "read.deseq.log",
                                "read.tmm", "read.tmm.log"), # a vector containing the list of normalization to compute and return, if a log transformation is specified the non-log version of the normalization should also be specified
-                      TaxRow = F
+                      TaxRow = F,
+                      rarefy.depth = NA
                       ){
   if (is.list(dataList)) {
     if (!"reads" %in% names(dataList)) {
@@ -131,9 +133,11 @@ multiNorm <- function(dataList = NULL, # a matrix containing reads count, with s
   }
   
   if ("read.rare" %in% norm | "read.rare.log" %in% norm) {
+    if(is.na(rarefy.depth)){
+      rarefy.depth <- min(phyloseq::sample_sums(read.phylo))
+        }
     ###normalizes by rarefying
-    set.seed(2023)
-    read.rare <- phyloseq::rarefy_even_depth(read.phylo)
+    read.rare <- phyloseq::rarefy_even_depth(read.phylo, sample.size = rarefy.depth, rngseed = 2023, verbose = F)
     if("read.rare" %in% norm){
     Res[["read.rare"]] <- as(phyloseq::otu_table(read.rare), "matrix")
     }
